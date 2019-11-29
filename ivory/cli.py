@@ -1,5 +1,6 @@
 import argparse
 import os
+import os.path
 
 from .commands import check
 
@@ -11,12 +12,18 @@ def make_parser(**kwargs) -> argparse.ArgumentParser:
 
     source_group = parser.add_argument_group(title='source database options')
     source_group.add_argument(
-        '--source-dsn', help="Source database DSN.", default='$SOURCE_DSN'
+        '--source-dsn',
+        help="Source database DSN.",
+        default='$SOURCE_DSN',
+        type=os.path.expandvars,
     )
 
     target_group = parser.add_argument_group(title='target database options')
     target_group.add_argument(
-        '--target-dsn', help="Target database DSN.", default='$TARGET_DSN'
+        '--target-dsn',
+        help="Target database DSN.",
+        default='$TARGET_DSN',
+        type=os.path.expandvars,
     )
 
     subparsers = parser.add_subparsers(required=True, dest='subcommand')
