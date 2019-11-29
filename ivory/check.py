@@ -53,10 +53,12 @@ async def check_allows_replication_connections(
 ) -> Optional[str]:
     """The master allows replication connections from the slave."""
 
-    (target_ip,) = await target_db.fetchrow("SELECT COALESCE(inet_server_addr(), '127.0.0.1')")
+    (target_ip,) = await target_db.fetchrow(
+        "SELECT COALESCE(inet_server_addr(), '127.0.0.1')"
+    )
     accepted_connections = await source_db.fetch(
         "SELECT address, netmask FROM pg_hba_file_rules WHERE database @> $1 AND address IS NOT NULL",
-        ['replication']
+        ['replication'],
     )
 
     if any(
@@ -71,3 +73,24 @@ async def check_replica_identity_set(
     source_db: asyncpg.Connection, target_db: asyncpg.Connection
 ) -> Optional[str]:
     """REPLICA IDENTITY is set for all tables."""
+
+    # From https://www.cybertec-postgresql.com/en/upgrading-postgres-major-versions-using-logical-replication/
+    problematic_tables = await source_db.fetch(
+        """
+        SELECT
+            quote_ident(nspname) || '.' || quote_ident(relname) AS tbl
+        FROM
+            pg_class c
+            JOIN pg_namespace n ON c.relnamespace = n.oid
+        WHERE
+            relkind = 'r'
+            AND NOT nspname LIKE ANY (ARRAY[E'pg\\_%', 'information_schema'])
+            AND NOT EXISTS (SELECT * FROM pg_index WHERE indrelid = c.oid
+                    AND indisunique AND indisvalid AND indisready AND indislive AND indisprimary)
+        """
+    )
+
+    if problematic_tables:
+        names = ', '.join(name for (name,) in problematic_tables)
+        return f"missing primary key / REPLICA IDENTITY on tables {names}"
+    return None
