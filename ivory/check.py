@@ -31,6 +31,7 @@ async def find_problems(
         check_allows_replication_connections,
         check_replica_identity_set,
         check_schema_sync,
+        check_database_encoding,
     )
 
     for check in checks:
@@ -135,3 +136,9 @@ async def check_schema_sync(
         return f"relation schemas out of sync: {relnames}"
 
     return None
+
+
+async def check_database_encoding(
+    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+) -> Optional[str]:
+    """Source and target databases have the same collation and encoding."""

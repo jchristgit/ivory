@@ -9,12 +9,12 @@ from . import cli
 
 
 def main() -> int:
-    logging.basicConfig(
-        format='%(asctime)s | %(levelname)-5s | %(name)-20s | %(message)s',
-        level=logging.INFO,
-    )
     parser = cli.make_parser(description=__doc__)
     args = parser.parse_args()
+    logging.basicConfig(
+        format='%(asctime)s | %(levelname)-5s | %(name)-20s | %(message)s',
+        level=getattr(logging, args.log_level),
+    )
     coroutine = args.func(args)
     return asyncio.run(coroutine)
 

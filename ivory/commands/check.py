@@ -1,3 +1,5 @@
+"""Check whether databases are ready."""
+
 import argparse
 import logging
 
