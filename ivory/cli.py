@@ -3,7 +3,7 @@ import os
 import os.path
 
 from .commands import check
-from .commands import syncschema
+from .commands import copyschema
 
 
 def make_parser(**kwargs) -> argparse.ArgumentParser:
@@ -38,7 +38,7 @@ def make_parser(**kwargs) -> argparse.ArgumentParser:
     parser_check = subparsers.add_parser('check', help=check.__doc__)
     parser_check.set_defaults(func=check.run)
 
-    parser_syncschema = subparsers.add_parser('syncschema', help=syncschema.__doc__)
-    parser_syncschema.set_defaults(func=syncschema.run)
+    parser_copyschema = subparsers.add_parser('copyschema', help=copyschema.__doc__)
+    parser_copyschema.set_defaults(func=copyschema.run)
 
     return parser
