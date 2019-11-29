@@ -97,7 +97,10 @@ async def check_replica_identity_set(
 
     if problematic_tables:
         names = ', '.join(name for (name,) in problematic_tables)
-        return f"missing primary key / REPLICA IDENTITY on table{ngettext('', 's', problematic_tables)} {names}"
+        return (
+            "missing primary key / REPLICA IDENTITY on table"
+            f"{ngettext('', 's', len(problematic_tables))} {names}"
+        )
     return None
 
 
