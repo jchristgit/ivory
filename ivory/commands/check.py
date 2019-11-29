@@ -14,7 +14,7 @@ async def run(args: argparse.Namespace) -> int:
         if result.error is None:
             log.debug(result.description)
         else:
-            log.error("Check failure: %s.", result.error)
+            log.error("%s: %s.", result.checker, result.error)
             rc = 1
 
     return rc
