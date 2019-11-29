@@ -28,6 +28,7 @@ async def find_problems(
         check_has_correct_wal_level,
         check_allows_replication_connections,
         check_replica_identity_set,
+        check_schema_sync,
     )
 
     for check in checks:
@@ -93,4 +94,37 @@ async def check_replica_identity_set(
     if problematic_tables:
         names = ', '.join(name for (name,) in problematic_tables)
         return f"missing primary key / REPLICA IDENTITY on tables {names}"
+    return None
+
+
+async def check_schema_sync(
+    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+) -> Optional[str]:
+    """Source and target database schemas are in sync."""
+
+    # TODO: Expand this.
+
+    query = """
+    SELECT
+        c.*
+    FROM
+        pg_class c
+        JOIN pg_namespace n ON c.relnamespace = n.oid
+    WHERE
+        NOT nspname LIKE ANY (ARRAY[E'pg\\_%', 'information_schema'])
+    ORDER BY
+        c.relname DESC
+    """
+
+    source_classes = await source_db.fetch(query)
+    target_classes = await target_db.fetch(query)
+
+    difference_from_source = set(source_classes) - set(target_classes)
+    difference_from_target = set(target_classes) - set(source_classes)
+    difference = difference_from_source | difference_from_target
+
+    if difference:
+        relnames = ', '.join(class_['relname'] for class_ in difference)
+        return f"relation schemas out of sync: {relnames}"
+
     return None
