@@ -14,7 +14,7 @@ from ivory import db
 log = logging.getLogger(__name__)
 
 
-def port_from_addr(addr: str) -> int:
+def port_from_addr(addr: str) -> str:
     matcher = re.compile(r'(\.s\.PGSQL\.|:)(\d+)')
     match = next(matcher.finditer(addr))
     return match.group(2)
@@ -31,7 +31,7 @@ async def run(args: argparse.Namespace) -> int:
     elif ':' in target_db._addr:
         host, port = target_db._addr.split(':')
     else:
-        host = target._addr
+        host = target_db._addr
         port = '5432'
 
     os.environ['PGPASSWORD'] = source_db._params.password or ''
@@ -59,7 +59,11 @@ async def run(args: argparse.Namespace) -> int:
         ) as f:
             f.write(schema)
 
-        log.info("Schema copied to %r.", f.name)
+        log.info("Schema SQL copied to %r.", f.name)
+
+    except Exception as err:
+        log.exception("Unable to dump database schema:", exc_info=err)
+        return 1
 
     finally:
         os.unsetenv('PGPASSWORD')
