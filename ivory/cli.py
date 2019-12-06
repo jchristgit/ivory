@@ -1,23 +1,10 @@
 import argparse
-import os
-import os.path
-from typing import Callable, Literal, Optional, Type, TypeVar
+from typing import Literal
 
-from .commands import check
-from .commands import copyschema
-from .commands import createreplication
-
-
-T = TypeVar('T')
-
-
-def expanded_value(type_: Type[T] = str, default: Optional[T] = None) -> Callable[[str], T]:
-    def expander(value: str) -> T:
-        if os.path.expandvars(value) == value:
-            return default
-        return type_(os.path.expandvars(value))  # type: ignore
-
-    return expander
+from ivory.commands import check
+from ivory.commands import copyschema
+from ivory.commands import createreplication
+from ivory.helpers import expanded_value
 
 
 def add_database_options(
