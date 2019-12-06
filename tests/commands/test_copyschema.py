@@ -28,5 +28,5 @@ async def test_run_reports_rc_0(
         rc = await copyschema.run(args)
         assert rc == 0
     finally:
-        await source_db.execute(f"DROP DATABASE {shlex.quote(database)}")
+        await source_db.execute(f"DROP DATABASE IF EXISTS {shlex.quote(database)}")
         await target_db.execute(f"DROP DATABASE IF EXISTS {shlex.quote(database)}")
