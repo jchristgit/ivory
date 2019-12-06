@@ -244,7 +244,9 @@ async def create_subscription(
             log.info("Subscription %r created.", subscription_name)
 
     else:
-        log.info("Subscription is active.")
+        log.info("Subscription with expected name found.")
+        if not active_subscription['subenabled']:
+            log.warning("Active subscription is not enabled.")
 
     return 0
 
