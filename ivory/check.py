@@ -143,14 +143,14 @@ async def check_schema_sync(
         port=args.source_port,
         dbname=args.source_dbname,
         user=args.source_user,
-        password=args.source_port,
+        password=args.source_password,
     )
     target_schema = await schema.dump(
         host=args.target_host,
         port=args.target_port,
         dbname=args.target_dbname,
         user=args.target_user,
-        password=args.target_port,
+        password=args.target_password,
     )
 
     if source_schema != target_schema:

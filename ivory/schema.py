@@ -29,7 +29,7 @@ async def dump(
                 '--host',
                 host,
                 '--port',
-                port,
+                str(port),
                 '--user',
                 user,
                 '--dbname',
