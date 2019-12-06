@@ -1,4 +1,5 @@
 import argparse
+import os
 from unittest.mock import AsyncMock, MagicMock
 
 import asyncpg
@@ -8,6 +9,9 @@ from ivory import check
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    os.getenv('CI'), reason="docker images disallow replication connections"
+)
 async def test_find_problems_finds_nothing_on_empty_database(
     source_db: asyncpg.Connection,
     target_db: asyncpg.Connection,
@@ -33,6 +37,9 @@ async def test_complains_about_wal_level_not_logical(
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    os.getenv('CI'), reason="docker images disallow replication connections"
+)
 async def test_complains_about_denied_replication_connection(
     target_db: asyncpg.Connection, cli_parser: argparse.ArgumentParser
 ) -> None:

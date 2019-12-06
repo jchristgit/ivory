@@ -19,7 +19,6 @@ test:
     - export SOURCE_HOST=source TARGET_HOST=target
     - pip install -r requirements-dev.txt -r requirements.in
   script:
-    - env
     - make PYTESTARGS='--junit-xml junit.xml'
   variables:
     POSTGRES_USER: root
