@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 from typing import Dict
 
-import asyncpg
+import asyncpg  # type: ignore
 
 from ivory import db
 
@@ -32,20 +32,10 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         '--maintenance-db',
         help=(
             "The database to connect to when dropping the "
-            "regular database as specified in the target DSN."
+            "regular database as specified in the target options."
         ),
         default='postgres',
     )
-
-
-def database_from_dsn(dsn: str) -> str:
-    _, current_target = dsn.rsplit('/', maxsplit=1)
-    return current_target
-
-
-def maintenance_dsn(regular_dsn: str, maintenance_db: str) -> str:
-    current_target = database_from_dsn(regular_dsn)
-    return regular_dsn.replace(f'/{current_target}', f'/{maintenance_db}')
 
 
 async def get_database_create_options(source_db: asyncpg.Connection) -> Dict[str, str]:
@@ -82,30 +72,32 @@ async def run(args: argparse.Namespace) -> int:
     database in the target schema will be
     """
 
-    maintenance_target = maintenance_dsn(
-        regular_dsn=args.target_dsn, maintenance_db=args.maintenance_db
-    )
     (source_db, maintenance_db) = await db.connect(
-        source_dsn=args.source_dsn, target_dsn=maintenance_target
+        args, target_override=dict(database=args.maintenance_db)
     )
 
     schema = await load_schema(source_db=source_db, target_db=maintenance_db)
-    target_database = database_from_dsn(args.target_dsn)
     await maintenance_db.execute(
-        f"DROP DATABASE IF EXISTS {shlex.quote(target_database)}"
+        f"DROP DATABASE IF EXISTS {shlex.quote(args.target_dbname)}"
     )
 
-    log.info("Dropped database %r from target.", target_database)
+    log.info("Dropped database %r from target.", args.target_dbname)
 
     create_opts = await get_database_create_options(source_db)
     joined_opts = ' '.join(f'{key} = {value}' for key, value in create_opts.items())
     await maintenance_db.execute(
-        f"CREATE DATABASE {shlex.quote(target_database)} WITH {joined_opts}"
+        f"CREATE DATABASE {shlex.quote(args.target_dbname)} WITH {joined_opts}"
     )
-    log.info("Created database %r on target.", target_database)
+    log.info("Created database %r on target.", args.target_dbname)
 
     log.debug("Applying schema on target (%d lines in SQL).", schema.count('\n'))
-    target_db = await asyncpg.connect(dsn=args.target_dsn)
+    target_db = await asyncpg.connect(
+        host=args.target_host,
+        port=args.target_port,
+        database=args.target_dbname,
+        user=args.target_user,
+        password=args.target_password,
+    )
     await target_db.execute(schema)
     log.info("Applied schema on target.")
 

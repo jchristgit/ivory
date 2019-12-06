@@ -26,9 +26,7 @@ async def run(args: argparse.Namespace) -> int:
 
     rc = 0
 
-    (source_db, target_db) = await db.connect(
-        source_dsn=args.source_dsn, target_dsn=args.target_dsn
-    )
+    (source_db, target_db) = await db.connect(args)
 
     async for result in check.find_problems(source_db=source_db, target_db=target_db):
         if result.error is None:

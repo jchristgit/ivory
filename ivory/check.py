@@ -5,7 +5,7 @@ from gettext import ngettext
 from ipaddress import IPv4Network
 from typing import AsyncGenerator, Optional, NamedTuple
 
-import asyncpg
+import asyncpg  # type: ignore
 
 from ivory.constants import REPLICATION_USERNAME
 
