@@ -39,12 +39,12 @@ async def run(args: argparse.Namespace) -> int:
 
     (my_lsn,) = await source_db.fetchrow('SELECT pg_current_wal_lsn()')
 
+    # "The `dt` argument is ignored." But if you don't pass it, it crashes.
+    reply_utcoffset = replication_stats['reply_time'].tzinfo.utcoffset(None)
+
     # timezones and unicode
     # horror
-    sane_reply_time = replication_stats['reply_time'] - replication_stats[
-        'reply_time'
-    ].tzinfo.utcoffset(None)
-
+    sane_reply_time = replication_stats['reply_time'] - reply_utcoffset
     last_reply_delta = datetime.now(timezone.utc) - sane_reply_time
     if last_reply_delta > timedelta(minutes=5):
         log.error(
