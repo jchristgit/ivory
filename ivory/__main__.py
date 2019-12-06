@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import sys
-from typing import Optional, List
+from typing import cast, Optional, List
 
 from . import cli
 
@@ -16,7 +16,7 @@ def main(cmdline: Optional[List[str]] = None) -> int:
         level=getattr(logging, args.log_level),
     )
     coroutine = args.func(args)
-    return asyncio.run(coroutine)
+    return cast(int, asyncio.run(coroutine))
 
 
 if __name__ == '__main__':

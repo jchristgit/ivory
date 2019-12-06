@@ -1,6 +1,6 @@
 import argparse
 import os
-from typing import Literal
+from typing import Any, Literal
 
 from ivory.commands import check
 from ivory.commands import copyschema
@@ -55,7 +55,7 @@ def add_database_options(
     )
 
 
-def make_parser(**kwargs) -> argparse.ArgumentParser:
+def make_parser(**kwargs: Any) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog='ivory', formatter_class=argparse.ArgumentDefaultsHelpFormatter, **kwargs
     )

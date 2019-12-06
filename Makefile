@@ -6,7 +6,8 @@ formatcheck:
 	black --check $(BLACKARGS) ivory tests
 
 typecheck:
-	mypy --pretty $(MYPYARGS) ivory tests
+	mypy --pretty --strict ivory
+	mypy --pretty tests
 
 lint:
 	flake8 --show-source --max-line-length 99 $(FLAKEARGS) ivory tests
