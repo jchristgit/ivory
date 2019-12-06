@@ -1,9 +1,12 @@
 all: check test
 
-check: formatcheck lint
+check: formatcheck typecheck lint
 
 formatcheck:
 	black --check ivory tests
+
+typecheck:
+	mypy --pretty ivory tests
 
 lint:
 	flake8 --show-source --max-line-length 99 ivory tests

@@ -1,8 +1,8 @@
 import argparse
 import os
 
-import asyncpg
-import pytest
+import asyncpg  # type: ignore
+import pytest  # type: ignore
 
 from ivory import cli
 

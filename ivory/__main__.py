@@ -8,9 +8,9 @@ from typing import Optional, List
 from . import cli
 
 
-def main(args: Optional[List[str]] = None) -> int:
+def main(cmdline: Optional[List[str]] = None) -> int:
     parser = cli.make_parser(description=__doc__)
-    args = parser.parse_args()
+    args = parser.parse_args(cmdline)
     logging.basicConfig(
         format='%(asctime)s | %(levelname)-7s | %(name)-20s | %(message)s',
         level=getattr(logging, args.log_level),

@@ -1,6 +1,7 @@
 import argparse
+import os
 
-import pytest
+import pytest  # type: ignore
 
 from ivory.commands import check
 

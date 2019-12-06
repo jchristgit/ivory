@@ -3,8 +3,8 @@ import contextlib
 import os
 import shlex
 
-import asyncpg
-import pytest
+import asyncpg  # type: ignore
+import pytest  # type: ignore
 
 from ivory.commands.replication import create
 from ivory.commands.replication import start

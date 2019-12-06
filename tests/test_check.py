@@ -2,8 +2,8 @@ import argparse
 import os
 from unittest.mock import AsyncMock, MagicMock
 
-import asyncpg
-import pytest
+import asyncpg  # type: ignore
+import pytest  # type: ignore
 
 from ivory import check
 
@@ -33,6 +33,7 @@ async def test_complains_about_wal_level_not_logical(
     result = await check.check_has_correct_wal_level(
         source_db=source_db, target_db=target_db, args=args
     )
+    assert result is not None
     assert result.endswith("needs `wal_level = logical`")
 
 
@@ -50,6 +51,7 @@ async def test_complains_about_denied_replication_connection(
     result = await check.check_allows_replication_connections(
         source_db=source_db, target_db=target_db, args=args
     )
+    assert result is not None
     assert result.startswith("no pg_hba conf entry allows replication connections")
 
 
@@ -87,6 +89,7 @@ async def test_complains_about_out_of_sync_schemas(
         result = await check.check_schema_sync(
             source_db=source_db, target_db=target_db, args=args
         )
+        assert result is not None
         assert result.startswith("relation schemas out of sync, see ")
     finally:
         await source_db.execute("DROP TABLE unsynced_table")

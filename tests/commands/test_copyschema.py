@@ -1,8 +1,8 @@
 import argparse
 import shlex
 
-import asyncpg
-import pytest
+import asyncpg  # type: ignore
+import pytest  # type: ignore
 
 from ivory.commands import copyschema
 

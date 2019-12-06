@@ -7,7 +7,7 @@ import os.path
 import shlex
 from datetime import datetime
 
-import asyncpg
+import asyncpg  # type: ignore
 
 from ivory import constants
 from ivory import check

@@ -5,7 +5,7 @@ import asyncpg  # type: ignore
 
 
 async def connect_single(
-    args: argparse.ArgumentParser,
+    args: argparse.Namespace,
     kind: Literal['source', 'target'],
     override: Dict[str, Any] = {},
 ) -> asyncpg.Connection:
@@ -21,7 +21,7 @@ async def connect_single(
 
 
 async def connect(
-    args: argparse.ArgumentParser,
+    args: argparse.Namespace,
     source_override: Dict[str, Any] = {},
     target_override: Dict[str, Any] = {},
 ) -> Tuple[asyncpg.Connection, asyncpg.Connection]:

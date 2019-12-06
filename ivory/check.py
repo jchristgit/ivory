@@ -25,7 +25,7 @@ class CheckResult(NamedTuple):
 async def find_problems(
     source_db: asyncpg.Connection,
     target_db: asyncpg.Connection,
-    args: argparse.ArgumentParser,
+    args: argparse.Namespace,
 ) -> AsyncGenerator[CheckResult, None]:
     # https://www.cybertec-postgresql.com/en/upgrading-postgres-major-versions-using-logical-replication/
     checks = (
@@ -48,7 +48,7 @@ async def find_problems(
 async def check_has_correct_wal_level(
     source_db: asyncpg.Connection,
     target_db: asyncpg.Connection,
-    args: argparse.ArgumentParser,
+    args: argparse.Namespace,
 ) -> Optional[str]:
     """The master has the correct WAL level set."""
 
@@ -63,7 +63,7 @@ async def check_has_correct_wal_level(
 async def check_allows_replication_connections(
     source_db: asyncpg.Connection,
     target_db: asyncpg.Connection,
-    args: argparse.ArgumentParser,
+    args: argparse.Namespace,
 ) -> Optional[str]:
     """The master allows replication connections from the slave."""
 
@@ -101,7 +101,7 @@ async def check_allows_replication_connections(
 async def check_replica_identity_set(
     source_db: asyncpg.Connection,
     target_db: asyncpg.Connection,
-    args: argparse.ArgumentParser,
+    args: argparse.Namespace,
 ) -> Optional[str]:
     """REPLICA IDENTITY is set for all tables."""
 
@@ -134,7 +134,7 @@ async def check_replica_identity_set(
 async def check_schema_sync(
     source_db: asyncpg.Connection,
     target_db: asyncpg.Connection,
-    args: argparse.ArgumentParser,
+    args: argparse.Namespace,
 ) -> Optional[str]:
     """Source and target database schemas are in sync."""
 
@@ -173,7 +173,7 @@ async def check_schema_sync(
 async def check_database_options(
     source_db: asyncpg.Connection,
     target_db: asyncpg.Connection,
-    args: argparse.ArgumentParser,
+    args: argparse.Namespace,
 ) -> Optional[str]:
     """Source and target databases have the same options set."""
 
