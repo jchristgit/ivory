@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-import os.path
 import sys
 
 from . import cli
