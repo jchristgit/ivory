@@ -10,11 +10,17 @@ test:
     - name: postgres
       alias: target
   before_script:
+    # ???
+    - unset SOURCE_HOST SOURCE_PORT SOURCE_DBNAME SOURCE_USER SOURCE_PASSWORD
+    - unset TARGET_HOST TARGET_PORT TARGET_DBNAME TARGET_USER TARGET_PASSWORD
+
+    - export SOURCE_HOST=source TARGET_HOST=target
     - pip install -r requirements-dev.txt -r requirements.in
   script:
     - env
     - make PYTESTARGS='--junit-xml junit.xml'
   variables:
+    POSTGRES_USER: root
     SOURCE_HOST: source
     TARGET_HOST: target
   cache:
