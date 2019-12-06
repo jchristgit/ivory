@@ -38,37 +38,56 @@ optional arguments:
 
 source database options:
   --source-host SOURCE_HOST
-                        Source database host to connect to. (default:
-                        $SOURCE_HOST)
+                        Source database host to connect to. Read from from
+                        $SOURCE_HOST. (default: None)
   --source-port SOURCE_PORT
-                        Source database port to connect to. (default:
-                        $SOURCE_PORT)
+                        Source database port to connect to. Read from from
+                        $SOURCE_PORT. (default: None)
   --source-user SOURCE_USER
-                        Source database user to use for operations. (default:
-                        $SOURCE_USER)
+                        Source database user to use for operations. Read from
+                        $SOURCE_USER. (default: None)
   --source-password SOURCE_PASSWORD
-                        Matching password for the source database user.
-                        (default: $SOURCE_PASSWORD)
+                        Matching password for the source database user. Read
+                        from $SOURCE_PASSWORD. (default: None)
   --source-dbname SOURCE_DBNAME
-                        Source database name to connect to. (default:
-                        $SOURCE_DBNAME)
+                        Source database name to connect to. Read from
+                        $SOURCE_DBNAME. (default: None)
 
 target database options:
   --target-host TARGET_HOST
-                        Target database host to connect to. (default:
-                        $TARGET_HOST)
+                        Target database host to connect to. Read from from
+                        $TARGET_HOST. (default: None)
   --target-port TARGET_PORT
-                        Target database port to connect to. (default:
-                        $TARGET_PORT)
+                        Target database port to connect to. Read from from
+                        $TARGET_PORT. (default: None)
   --target-user TARGET_USER
-                        Target database user to use for operations. (default:
-                        $TARGET_USER)
+                        Target database user to use for operations. Read from
+                        $TARGET_USER. (default: None)
   --target-password TARGET_PASSWORD
-                        Matching password for the target database user.
-                        (default: $TARGET_PASSWORD)
+                        Matching password for the target database user. Read
+                        from $TARGET_PASSWORD. (default: None)
   --target-dbname TARGET_DBNAME
-                        Target database name to connect to. (default:
-                        $TARGET_DBNAME)
+                        Target database name to connect to. Read from
+                        $TARGET_DBNAME. (default: None)
+```
+
+Replication subcommand:
+
+```sh
+usage: ivory replication [-h] {create,start,status,stop,drop} ...
+
+positional arguments:
+  {create,start,status,stop,drop}
+    create              Set up logical replication from the source to the
+                        target database.
+    start               Start logical replication.
+    status              Display replication status.
+    stop                Stop logical replication.
+    drop                Drop logical replication from the source to the target
+                        database.
+
+optional arguments:
+  -h, --help            show this help message and exit
 ```
 
 <!-- vim: set ts=2 sw=2 textwidth=80: -->
