@@ -16,30 +16,34 @@ def port_from_addr(addr: str) -> str:
 
 
 async def dump(
-    host: str, port: int, dbname: str, user: str, password: Optional[str]
+    host: Optional[str],
+    port: Optional[int],
+    dbname: Optional[str],
+    user: Optional[str],
+    password: Optional[str],
 ) -> str:
     log.debug("Retrieving database schema.")
 
     os.environ['PGPASSWORD'] = password or ''
 
     try:
-        schema = subprocess.check_output(
-            (
-                'pg_dump',
-                '--host',
-                host,
-                '--port',
-                str(port),
-                '--user',
-                user,
-                '--dbname',
-                dbname,
-                '--schema-only',
-                '--no-publications',
-                '--no-subscriptions',
-            ),
-            text=True,
-        )
+        cmdline = [
+            'pg_dump',
+            '--schema-only',
+            '--no-publications',
+            '--no-subscriptions',
+        ]
+
+        if host:
+            cmdline.extend(['--host', host])
+        if port:
+            cmdline.extend(['--port', str(port)])
+        if user:
+            cmdline.extend(['--user', user])
+        if dbname:
+            cmdline.extend(['--dbname', dbname])
+
+        schema = subprocess.check_output(cmdline, text=True,)
 
         with tempfile.NamedTemporaryFile(
             prefix='ivory-schema', mode='w+', suffix='.sql', delete=False
