@@ -3,6 +3,7 @@
 import argparse
 import logging
 from datetime import datetime, timedelta, timezone
+from typing import Literal
 
 from ivory import constants
 from ivory import db
@@ -14,12 +15,18 @@ log = logging.getLogger(__name__)
 def add_arguments(parser: argparse.ArgumentParser) -> None:
     """Add status command-specific arguments."""
 
+    parser.add_argument(
+        '--subscription-name',
+        help="The name of the subscription on the target database.",
+        default=constants.DEFAULT_SUBSCRIPTION_NAME,
+    )
+
 
 async def run(args: argparse.Namespace) -> int:
     """Display the current status of replication."""
 
     rc = 0
-    source_db = await db.connect_single(args, kind='source')
+    (source_db, target_db) = await db.connect(args)
     replication_stats = await source_db.fetchrow(
         """
         SELECT
@@ -68,4 +75,54 @@ async def run(args: argparse.Namespace) -> int:
             my_lsn - replication_stats['flush_lsn'],
         )
 
+    slot = await source_db.fetchrow(
+        "SELECT * FROM pg_replication_slots WHERE slot_name = $1",
+        args.subscription_name,
+    )
+
+    if slot is None:
+        log.error("Missing replication slot with name %r.", args.subscription_name)
+        rc = 1
+    elif not slot['active']:
+        log.error("Replication slot %r is not active.", args.subscription_name)
+        rc = 1
+    else:
+        log.info("Replication slot is active.")
+
+    state_sql = """
+    SELECT
+        pc.relname AS "name",
+        psr.srsubstate AS "state"
+    FROM
+        pg_catalog.pg_subscription_rel AS psr
+        JOIN pg_catalog.pg_subscription AS ps ON (psr.srsubid = ps.oid)
+        JOIN pg_catalog.pg_class AS pc ON (psr.srrelid = pc.oid)
+    WHERE
+        ps.subname = $1
+    """
+
+    states = await target_db.fetch(state_sql, args.subscription_name)
+
+    for (name, state) in states:
+        if state != 'r':
+            log.error(
+                "Relation %r is not ready: %s (srsubstate=%r).",
+                name,
+                substate_to_human(state),
+                state.decode(),
+            )
+            rc = 1
+
     return rc
+
+
+def substate_to_human(value: Literal[b'i', b'd', b's', b'r']) -> str:
+    if value == b'i':
+        return 'initialize'
+    elif value == b'd':
+        return 'data is being copied'
+    elif value == b's':
+        return 'synchronized'
+    elif value == b'r':
+        return 'ready (normal replication)'
+    raise ValueError(f"unknown value: {value!r}")
