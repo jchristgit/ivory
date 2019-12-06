@@ -2,6 +2,7 @@ import argparse
 
 from ivory.commands.replication import create
 from ivory.commands.replication import start
+from ivory.commands.replication import status
 from ivory.commands.replication import stop
 
 
@@ -17,6 +18,11 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser_start.description = start.run.__doc__
     parser_start.set_defaults(func=start.run)
     start.add_arguments(parser_start)
+
+    parser_status = subparsers.add_parser('status', help=status.__doc__)
+    parser_status.description = status.run.__doc__
+    parser_status.set_defaults(func=status.run)
+    status.add_arguments(parser_status)
 
     parser_stop = subparsers.add_parser('stop', help=stop.__doc__)
     parser_stop.description = stop.run.__doc__

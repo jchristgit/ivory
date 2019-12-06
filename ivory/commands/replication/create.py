@@ -217,7 +217,7 @@ async def create_subscription(
         f"host={shlex.quote(remove_socket(source_host))} "
         f"port={source_port} "
         f"dbname={shlex.quote(source_dbname)} "
-        f"application_name=ivory_replicator "
+        f"application_name={shlex.quote(constants.REPLICATION_APPLICATION_NAME)} "
         f"user={shlex.quote(constants.REPLICATION_USERNAME)} "
         f"password={shlex.quote(password)}"
     )
