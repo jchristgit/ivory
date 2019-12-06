@@ -1,6 +1,6 @@
 import os.path
 import shlex
-from typing import Callable, Literal, Optional, Type, TypeVar
+from typing import Callable, Optional, Type, TypeVar
 
 
 T = TypeVar('T')
