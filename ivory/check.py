@@ -4,7 +4,7 @@ import argparse
 import difflib
 import tempfile
 from gettext import ngettext
-from ipaddress import IPv4Network
+from ipaddress import ip_network
 from typing import AsyncGenerator, Optional, NamedTuple
 
 import asyncpg  # type: ignore
@@ -88,8 +88,7 @@ async def check_allows_replication_connections(
     )
 
     if any(
-        target_ip in IPv4Network(address, netmask)
-        for (address, netmask) in accepted_connections
+        target_ip in ip_network(address) for (address, netmask) in accepted_connections
     ):
         return None
 
