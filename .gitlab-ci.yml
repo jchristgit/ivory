@@ -7,8 +7,10 @@ test:
   services:
     - name: postgres
       alias: source
+      command: [-c, 'wal_level=logical']
     - name: postgres
       alias: target
+      command: [-c, 'wal_level=logical']
   before_script:
     # ???
     - unset SOURCE_HOST SOURCE_PORT SOURCE_DBNAME SOURCE_USER SOURCE_PASSWORD
