@@ -1,10 +1,10 @@
 import argparse
+import os
 from typing import Literal
 
 from ivory.commands import check
 from ivory.commands import copyschema
 from ivory.commands import replication
-from ivory.helpers import expanded_value
 
 
 def add_database_options(
@@ -14,33 +14,43 @@ def add_database_options(
     description_key = kind.title()
     group.add_argument(
         f'--{kind}-host',
-        help=f"{description_key} database host to connect to.",
-        default=f'${env_key}_HOST',
-        type=expanded_value(),
+        help=(
+            f"{description_key} database host to connect to. Read from "
+            f"from ${env_key}_HOST."
+        ),
+        default=os.getenv(f"{env_key}_HOST"),
     )
     group.add_argument(
         f'--{kind}-port',
-        help=f"{description_key} database port to connect to.",
-        default=f'${env_key}_PORT',
-        type=expanded_value(type_=int, default=5432),
+        help=(
+            f"{description_key} database port to connect to. Read from "
+            f"from ${env_key}_PORT."
+        ),
+        default=os.getenv(f'{env_key}_PORT'),
     )
     group.add_argument(
         f'--{kind}-user',
-        help=f"{description_key} database user to use for operations.",
-        default=f'${env_key}_USER',
-        type=expanded_value(),
+        help=(
+            f"{description_key} database user to use for operations. Read "
+            f"from ${env_key}_USER."
+        ),
+        default=os.getenv(f'{env_key}_USER'),
     )
     group.add_argument(
         f'--{kind}-password',
-        help=f"Matching password for the {kind} database user.",
-        default=f'${env_key}_PASSWORD',
-        type=expanded_value(),
+        help=(
+            f"Matching password for the {kind} database user. Read from "
+            f"${env_key}_PASSWORD."
+        ),
+        default=os.getenv(f'{env_key}_PASSWORD'),
     )
     group.add_argument(
         f'--{kind}-dbname',
-        help=f"{description_key} database name to connect to.",
-        default=f'${env_key}_DBNAME',
-        type=expanded_value(),
+        help=(
+            f"{description_key} database name to connect to. Read from "
+            f"${env_key}_DBNAME."
+        ),
+        default=os.getenv(f'{env_key}_DBNAME'),
     )
 
 

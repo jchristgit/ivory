@@ -54,10 +54,10 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         help=(
             "Specific password to use for the replication user. By default, "
             "ivory will generate a password and print it to standard output. "
-            "Password altering is not performed if the password was updated."
+            "Password altering is not performed if the password was updated. "
+            "Read from $REPLICATION_PASSWORD."
         ),
-        default='$REPLICATION_PASSWORD',
-        type=helpers.expanded_value(),
+        default=os.getenv('REPLICATION_PASSWORD'),
     )
 
 
