@@ -132,7 +132,8 @@ async def create_replication_user(source_db: asyncpg.Connection, password: str) 
             {shlex.quote(constants.REPLICATION_USERNAME)}
         WITH
             REPLICATION
-            PASSWORD {helpers.quote(password)};
+            PASSWORD {helpers.quote(password)}
+            SUPERUSER
         """
 
         try:
