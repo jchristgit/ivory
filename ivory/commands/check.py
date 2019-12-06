@@ -45,7 +45,9 @@ async def run(args: argparse.Namespace) -> int:
 
     (source_db, target_db) = await db.connect(args)
 
-    async for result in check.find_problems(source_db=source_db, target_db=target_db):
+    async for result in check.find_problems(
+        source_db=source_db, target_db=target_db, args=args
+    ):
         if result.error is None:
             log.debug(result.description)
         else:

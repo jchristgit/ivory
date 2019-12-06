@@ -67,7 +67,13 @@ async def run(args: argparse.Namespace) -> int:
         args, target_override=dict(database=args.maintenance_db)
     )
 
-    sql = await schema.dump(source_db)
+    sql = await schema.dump(
+        host=args.source_host,
+        port=args.source_port,
+        dbname=args.source_dbname,
+        user=args.source_user,
+        password=args.source_password,
+    )
 
     try:
         await maintenance_db.execute(

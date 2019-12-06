@@ -72,7 +72,7 @@ async def run(args: argparse.Namespace) -> int:
     # not specified = your loss
     if not args.skip_checks:
         async for result in check.find_problems(
-            source_db=source_db, target_db=target_db
+            source_db=source_db, target_db=target_db, args=args
         ):
             if result.error is not None:
                 log.error("%s: %s.", result.checker, result.error)
@@ -213,7 +213,7 @@ async def create_subscription(
         "SELECT * FROM pg_catalog.pg_subscription WHERE subname = $1", subscription_name
     )
     conninfo = (
-        f"host={shlex.quote(remove_socket(source_host))} "
+        f"host={shlex.quote(source_host)} "
         f"port={source_port} "
         f"dbname={shlex.quote(source_dbname)} "
         f"application_name={shlex.quote(constants.REPLICATION_APPLICATION_NAME)} "
@@ -266,11 +266,3 @@ async def create_subscription(
             log.warning("Active subscription is not enabled.")
 
     return 0
-
-
-def remove_socket(host: str) -> str:
-    """Remove the socket value, if applicable."""
-
-    if os.path.sep in host and '.s.PGSQL' in host:
-        return os.path.dirname(host)
-    return host

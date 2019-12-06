@@ -1,3 +1,4 @@
+import argparse
 from unittest.mock import AsyncMock, MagicMock
 
 import asyncpg
@@ -8,48 +9,56 @@ from ivory import check
 
 @pytest.mark.asyncio
 async def test_find_problems_finds_nothing_on_empty_database(
-    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+    source_db: asyncpg.Connection,
+    target_db: asyncpg.Connection,
+    cli_parser: argparse.ArgumentParser,
 ) -> None:
-    async for result in check.find_problems(source_db, target_db):
+    args = cli_parser.parse_args(["check"])
+    async for result in check.find_problems(source_db, target_db, args):
         assert result.error is None
 
 
 @pytest.mark.asyncio
 async def test_complains_about_wal_level_not_logical(
-    target_db: asyncpg.Connection,
+    target_db: asyncpg.Connection, cli_parser: argparse.ArgumentParser
 ) -> None:
     source_db = MagicMock(spec=asyncpg.Connection)
     source_db.fetchrow = AsyncMock(return_value=('not-logical',))
 
+    args = cli_parser.parse_args(["check"])
     result = await check.check_has_correct_wal_level(
-        source_db=source_db, target_db=target_db
+        source_db=source_db, target_db=target_db, args=args
     )
     assert result.endswith("needs `wal_level = logical`")
 
 
 @pytest.mark.asyncio
 async def test_complains_about_denied_replication_connection(
-    target_db: asyncpg.Connection,
+    target_db: asyncpg.Connection, cli_parser: argparse.ArgumentParser
 ) -> None:
     source_db = MagicMock(spec=asyncpg.Connection)
     source_db.fetch = AsyncMock(return_value=())
 
+    args = cli_parser.parse_args(["check"])
     result = await check.check_allows_replication_connections(
-        source_db=source_db, target_db=target_db
+        source_db=source_db, target_db=target_db, args=args
     )
     assert result.startswith("no pg_hba conf entry allows replication connections")
 
 
 @pytest.mark.asyncio
 async def test_complains_about_missing_replica_identity(
-    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+    source_db: asyncpg.Connection,
+    target_db: asyncpg.Connection,
+    cli_parser: argparse.ArgumentParser,
 ) -> None:
     tx = source_db.transaction()
     try:
         await tx.start()
         await source_db.execute("CREATE TABLE without_identity (foo INT)")
+        args = cli_parser.parse_args(["check"])
         result = await check.check_replica_identity_set(
-            source_db=source_db, target_db=target_db
+            source_db=source_db, target_db=target_db, args=args
         )
         assert (
             result
@@ -61,11 +70,16 @@ async def test_complains_about_missing_replica_identity(
 
 @pytest.mark.asyncio
 async def test_complains_about_out_of_sync_schemas(
-    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+    source_db: asyncpg.Connection,
+    target_db: asyncpg.Connection,
+    cli_parser: argparse.ArgumentParser,
 ) -> None:
     try:
         await source_db.execute("CREATE TABLE unsynced_table (bar INT PRIMARY KEY)")
-        result = await check.check_schema_sync(source_db=source_db, target_db=target_db)
+        args = cli_parser.parse_args(["check"])
+        result = await check.check_schema_sync(
+            source_db=source_db, target_db=target_db, args=args
+        )
         assert result.startswith("relation schemas out of sync, see ")
     finally:
         await source_db.execute("DROP TABLE unsynced_table")
@@ -74,7 +88,10 @@ async def test_complains_about_out_of_sync_schemas(
 @pytest.mark.asyncio
 @pytest.mark.parametrize('limit', (3,))
 async def test_complains_about_mismatched_database_options(
-    source_db: asyncpg.Connection, target_db: asyncpg.Connection, limit: int
+    source_db: asyncpg.Connection,
+    target_db: asyncpg.Connection,
+    cli_parser: argparse.ArgumentParser,
+    limit: int,
 ) -> None:
     (dbname,) = await source_db.fetchrow("SELECT current_database()")
     (target_limit,) = await target_db.fetchrow(
@@ -90,8 +107,9 @@ async def test_complains_about_mismatched_database_options(
 
     try:
         await source_db.execute(f"ALTER DATABASE {dbname} CONNECTION LIMIT {limit}")
+        args = cli_parser.parse_args(["check"])
         result = await check.check_database_options(
-            source_db=source_db, target_db=target_db
+            source_db=source_db, target_db=target_db, args=args
         )
         assert result == (
             f"database connection limit is {limit} "

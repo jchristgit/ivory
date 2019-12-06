@@ -1,4 +1,6 @@
-all: formatcheck lint test
+all: check test
+
+check: formatcheck lint
 
 formatcheck:
 	black --check ivory tests

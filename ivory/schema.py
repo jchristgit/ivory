@@ -3,9 +3,7 @@ import os
 import re
 import subprocess
 import tempfile
-from pathlib import Path
-
-import asyncpg
+from typing import Optional
 
 
 log = logging.getLogger(__name__)
@@ -17,19 +15,12 @@ def port_from_addr(addr: str) -> str:
     return match.group(2)
 
 
-async def dump(db: asyncpg.Connection) -> str:
+async def dump(
+    host: str, port: int, dbname: str, user: str, password: Optional[str]
+) -> str:
     log.debug("Retrieving database schema.")
 
-    if db._addr.startswith('/'):
-        host = str(Path(db._addr).parent)
-        port = port_from_addr(db._addr)
-    elif ':' in db._addr:
-        host, port = db._addr.split(':')
-    else:
-        host = db._addr
-        port = '5432'
-
-    os.environ['PGPASSWORD'] = db._params.password or ''
+    os.environ['PGPASSWORD'] = password or ''
 
     try:
         schema = subprocess.check_output(
@@ -40,9 +31,9 @@ async def dump(db: asyncpg.Connection) -> str:
                 '--port',
                 port,
                 '--user',
-                db._params.user,
+                user,
                 '--dbname',
-                db._params.database,
+                dbname,
                 '--schema-only',
                 '--no-publications',
                 '--no-subscriptions',

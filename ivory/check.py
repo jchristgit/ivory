@@ -1,5 +1,6 @@
 """Pre-flight checks."""
 
+import argparse
 import difflib
 import tempfile
 from gettext import ngettext
@@ -22,7 +23,9 @@ class CheckResult(NamedTuple):
 
 
 async def find_problems(
-    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+    source_db: asyncpg.Connection,
+    target_db: asyncpg.Connection,
+    args: argparse.ArgumentParser,
 ) -> AsyncGenerator[CheckResult, None]:
     # https://www.cybertec-postgresql.com/en/upgrading-postgres-major-versions-using-logical-replication/
     checks = (
@@ -36,14 +39,16 @@ async def find_problems(
     for check in checks:
         assert check.__doc__ is not None
 
-        error = await check(source_db=source_db, target_db=target_db)
+        error = await check(source_db=source_db, target_db=target_db, args=args)
         yield CheckResult(
             checker=check.__name__, description=check.__doc__, error=error
         )
 
 
 async def check_has_correct_wal_level(
-    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+    source_db: asyncpg.Connection,
+    target_db: asyncpg.Connection,
+    args: argparse.ArgumentParser,
 ) -> Optional[str]:
     """The master has the correct WAL level set."""
 
@@ -56,7 +61,9 @@ async def check_has_correct_wal_level(
 
 
 async def check_allows_replication_connections(
-    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+    source_db: asyncpg.Connection,
+    target_db: asyncpg.Connection,
+    args: argparse.ArgumentParser,
 ) -> Optional[str]:
     """The master allows replication connections from the slave."""
 
@@ -93,7 +100,9 @@ async def check_allows_replication_connections(
 
 
 async def check_replica_identity_set(
-    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+    source_db: asyncpg.Connection,
+    target_db: asyncpg.Connection,
+    args: argparse.ArgumentParser,
 ) -> Optional[str]:
     """REPLICA IDENTITY is set for all tables."""
 
@@ -124,12 +133,26 @@ async def check_replica_identity_set(
 
 
 async def check_schema_sync(
-    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+    source_db: asyncpg.Connection,
+    target_db: asyncpg.Connection,
+    args: argparse.ArgumentParser,
 ) -> Optional[str]:
     """Source and target database schemas are in sync."""
 
-    source_schema = await schema.dump(source_db)
-    target_schema = await schema.dump(target_db)
+    source_schema = await schema.dump(
+        host=args.source_host,
+        port=args.source_port,
+        dbname=args.source_dbname,
+        user=args.source_user,
+        password=args.source_port,
+    )
+    target_schema = await schema.dump(
+        host=args.target_host,
+        port=args.target_port,
+        dbname=args.target_dbname,
+        user=args.target_user,
+        password=args.target_port,
+    )
 
     if source_schema != target_schema:
         differ = difflib.HtmlDiff(tabsize=4)
@@ -149,7 +172,9 @@ async def check_schema_sync(
 
 
 async def check_database_options(
-    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+    source_db: asyncpg.Connection,
+    target_db: asyncpg.Connection,
+    args: argparse.ArgumentParser,
 ) -> Optional[str]:
     """Source and target databases have the same options set."""
 
