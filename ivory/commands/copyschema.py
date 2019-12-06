@@ -7,6 +7,7 @@ import re
 import shlex
 import subprocess
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from typing import Dict
 
@@ -77,16 +78,29 @@ async def run(args: argparse.Namespace) -> int:
     )
 
     schema = await load_schema(source_db=source_db, target_db=maintenance_db)
-    await maintenance_db.execute(
-        f"DROP DATABASE IF EXISTS {shlex.quote(args.target_dbname)}"
-    )
+    try:
+        await maintenance_db.execute(
+            f"DROP DATABASE IF EXISTS {shlex.quote(args.target_dbname)}"
+        )
 
-    log.info("Dropped database %r from target.", args.target_dbname)
+    except asyncpg.exceptions.PostgresError as err:
+        log.exception(
+            "Unable to drop database %r on target:", args.target_dbname, exc_info=err
+        )
+        return 1
+    else:
+        log.info("Dropped database %r from target.", args.target_dbname)
 
     create_opts = await get_database_create_options(source_db)
     joined_opts = ' '.join(f'{key} = {value}' for key, value in create_opts.items())
     await maintenance_db.execute(
         f"CREATE DATABASE {shlex.quote(args.target_dbname)} WITH {joined_opts}"
+    )
+    await maintenance_db.execute(
+        f"""
+        COMMENT ON DATABASE {shlex.quote(args.target_dbname)}
+        IS 'Created via ivory on {datetime.utcnow().isoformat()}'
+        """
     )
     log.info("Created database %r on target.", args.target_dbname)
 
