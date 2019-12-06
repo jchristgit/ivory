@@ -12,6 +12,7 @@ test:
   before_script:
     - pip install -r requirements-dev.txt -r requirements.in
   script:
+    - env
     - make PYTESTARGS='--junit-xml junit.xml'
   variables:
     SOURCE_HOST: source
