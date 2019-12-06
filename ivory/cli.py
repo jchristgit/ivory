@@ -26,7 +26,8 @@ def add_database_options(
             f"{description_key} database port to connect to. Read from "
             f"from ${env_key}_PORT."
         ),
-        default=os.getenv(f'{env_key}_PORT'),
+        default=os.getenv(f'{env_key}_PORT', 5432),
+        type=int,
     )
     group.add_argument(
         f'--{kind}-user',
