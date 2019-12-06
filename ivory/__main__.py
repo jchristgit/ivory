@@ -1,4 +1,4 @@
-"""Manages PostgreSQL upgrades via logical replication."""
+"""Manages PostgreSQL logical replication."""
 
 import asyncio
 import logging

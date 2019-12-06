@@ -1,6 +1,15 @@
 # ivory
 
-Manages PostgreSQL upgrades via logical replication.
+Manages PostgreSQL logical replication.
+
+## Description
+
+`ivory` is a tool which manages logical replication of a source database to a
+target database. Management of the following is performed:
+
+- Checking for discrepancies between source and target database
+- Copying the source database schema to the target database
+- Setting up a logical replication connection
 
 ## Usage
 
@@ -14,7 +23,7 @@ usage: ivory [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
              [--target-dbname TARGET_DBNAME]
              {check,copyschema,createreplication} ...
 
-Manages PostgreSQL upgrades via logical replication.
+Manages PostgreSQL logical replication.
 
 positional arguments:
   {check,copyschema,createreplication}
@@ -62,3 +71,5 @@ target database options:
                         Target database name to connect to. (default:
                         $TARGET_DBNAME)
 ```
+
+<!-- vim: set ts=2 sw=2 textwidth=80: -->
