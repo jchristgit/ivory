@@ -82,6 +82,7 @@ async def check_replica_identity_set(
     """REPLICA IDENTITY is set for all tables."""
 
     # From https://www.cybertec-postgresql.com/en/upgrading-postgres-major-versions-using-logical-replication/
+    # Slightly altered to account for missing columns.
     problematic_tables = await source_db.fetch(
         """
         SELECT
