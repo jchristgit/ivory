@@ -245,8 +245,13 @@ async def create_subscription(
     else:
         await target_db.execute(
             f"""
-            ALTER SUBSCRIPTION {shlex.quote(subscription_name)} CONNECTION {shlex.quote(conninfo)};
-            ALTER SUBSCRIPTION {shlex.quote(subscription_name)} SET PUBLICATION {shlex.quote(publication_name)};
+            ALTER SUBSCRIPTION
+                {shlex.quote(subscription_name)}
+                CONNECTION {shlex.quote(conninfo)};
+
+            ALTER SUBSCRIPTION
+                {shlex.quote(subscription_name)}
+                SET PUBLICATION {shlex.quote(publication_name)};
             """
         )
         log.info("Existing subscription updated.")
