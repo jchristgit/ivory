@@ -13,8 +13,6 @@ test:
       command: [-c, 'wal_level=logical']
   before_script:
     # ???
-    - apt update -y
-    - apt install -y postgresql-client-11
     - unset SOURCE_HOST SOURCE_PORT SOURCE_DBNAME SOURCE_USER SOURCE_PASSWORD
     - unset TARGET_HOST TARGET_PORT TARGET_DBNAME TARGET_USER TARGET_PASSWORD
 
