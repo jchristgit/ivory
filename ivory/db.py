@@ -16,7 +16,7 @@ async def connect(
         'database': args.source_dbname,
         'user': args.source_user,
         'password': args.source_password,
-        **source_override
+        **source_override,
     }
 
     target_options = {
@@ -25,7 +25,7 @@ async def connect(
         'database': args.target_dbname,
         'user': args.target_user,
         'password': args.target_password,
-        **target_override
+        **target_override,
     }
 
     source = await asyncpg.connect(**source_options)
