@@ -4,6 +4,7 @@ from ivory.commands.replication import create
 from ivory.commands.replication import start
 from ivory.commands.replication import status
 from ivory.commands.replication import stop
+from ivory.commands.replication import drop  # normally i sort imports but this
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
@@ -28,3 +29,8 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser_stop.description = stop.run.__doc__
     parser_stop.set_defaults(func=stop.run)
     stop.add_arguments(parser_stop)
+
+    parser_drop = subparsers.add_parser('drop', help=drop.__doc__)
+    parser_drop.description = drop.run.__doc__
+    parser_drop.set_defaults(func=drop.run)
+    drop.add_arguments(parser_drop)

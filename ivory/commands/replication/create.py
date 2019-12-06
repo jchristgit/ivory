@@ -146,11 +146,7 @@ async def create_replication_user(source_db: asyncpg.Connection, password: str) 
             log.exception("Unable to create user:", exc_info=err)
             return 1
         else:
-            log.info(
-                "Created replication user %r with password %r.",
-                constants.REPLICATION_USERNAME,
-                password,
-            )
+            log.info("Created replication user %r.", constants.REPLICATION_USERNAME)
 
     else:
         log.debug("Existing user found.")
