@@ -16,7 +16,8 @@ from ivory.commands.replication import drop
 @pytest.mark.asyncio
 @pytest.mark.parametrize('database', ('ivory_replication_test',))
 @pytest.mark.skipif(
-    os.getenv('CI'), reason="postgres docker images do not support replication"
+    os.getenv('CI') == 'true',
+    reason="postgres docker images do not support replication",
 )
 async def test_full_lifecycle(
     source_db: asyncpg.Connection,
