@@ -3,7 +3,7 @@ all: check test
 check: formatcheck typecheck lint
 
 formatcheck:
-	black --check $(BLACKARGS) ibory tests
+	black --check $(BLACKARGS) ivory tests
 
 typecheck:
 	mypy --pretty $(MYPYARGS) ivory tests
