@@ -7,7 +7,7 @@ from typing import AsyncGenerator, Optional, NamedTuple
 
 import asyncpg
 
-from . import db
+from ivory.constants import REPLICATION_USERNAME
 
 
 __all__ = ('find_problems',)
@@ -20,12 +20,8 @@ class CheckResult(NamedTuple):
 
 
 async def find_problems(
-    source_dsn: str, target_dsn: str
+    source_db: asyncpg.Connection, target_db: asyncpg.Connection
 ) -> AsyncGenerator[CheckResult, None]:
-    (source_db, target_db) = await db.connect(
-        source_dsn=source_dsn, target_dsn=target_dsn
-    )
-
     # https://www.cybertec-postgresql.com/en/upgrading-postgres-major-versions-using-logical-replication/
     checks = (
         check_has_correct_wal_level,
@@ -36,6 +32,8 @@ async def find_problems(
     )
 
     for check in checks:
+        assert check.__doc__ is not None
+
         error = await check(source_db=source_db, target_db=target_db)
         yield CheckResult(
             checker=check.__name__, description=check.__doc__, error=error
@@ -64,8 +62,20 @@ async def check_allows_replication_connections(
         "SELECT COALESCE(inet_server_addr(), '127.0.0.1')"
     )
     accepted_connections = await source_db.fetch(
-        "SELECT address, netmask FROM pg_hba_file_rules WHERE database @> $1 AND address IS NOT NULL",
+        """
+        SELECT
+            address,
+            netmask
+        FROM
+            pg_hba_file_rules
+        WHERE
+            database @> $1
+            AND address IS NOT NULL
+            AND (user_name @> $2 OR user_name @> $3)
+        """,
         ['replication'],
+        [REPLICATION_USERNAME],
+        ['all'],
     )
 
     if any(
@@ -73,7 +83,11 @@ async def check_allows_replication_connections(
         for (address, netmask) in accepted_connections
     ):
         return None
-    return f"no pg_hba conf entry allows replication connections from {target_ip}"
+
+    return (
+        "no pg_hba conf entry allows replication "
+        f"connections from {target_ip} via user {REPLICATION_USERNAME!r}"
+    )
 
 
 async def check_replica_identity_set(
