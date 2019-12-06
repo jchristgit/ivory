@@ -1,6 +1,7 @@
 """Pre-flight checks."""
 
-import shlex
+import difflib
+import tempfile
 from gettext import ngettext
 from ipaddress import IPv4Network
 from typing import AsyncGenerator, Optional, NamedTuple
@@ -8,6 +9,7 @@ from typing import AsyncGenerator, Optional, NamedTuple
 import asyncpg  # type: ignore
 
 from ivory.constants import REPLICATION_USERNAME
+from ivory import schema
 
 
 __all__ = ('find_problems',)
@@ -126,49 +128,22 @@ async def check_schema_sync(
 ) -> Optional[str]:
     """Source and target database schemas are in sync."""
 
-    # TODO: Expand this.
+    source_schema = await schema.dump(source_db)
+    target_schema = await schema.dump(target_db)
 
-    query = """
-    SELECT
-        c.relname,
-        (SELECT usename FROM pg_catalog.pg_user WHERE usesysid = c.relowner),
-        c.relhasindex,
-        c.relisshared,
-        c.relpersistence,
-        c.relkind,
-        c.relnatts,
-        c.relchecks,
-        c.relhasrules,
-        c.relhastriggers,
-        c.relhassubclass,
-        c.relrowsecurity,
-        c.relforcerowsecurity,
-        c.relispopulated,
-        c.relreplident,
-        c.relispartition,
-        c.relrewrite,
-        c.relacl,
-        c.reloptions,
-        c.relpartbound
-    FROM
-        pg_class c
-        JOIN pg_namespace n ON c.relnamespace = n.oid
-    WHERE
-        NOT nspname LIKE ANY (ARRAY[E'pg\\_%', 'information_schema'])
-    ORDER BY
-        c.relname DESC
-    """
-
-    source_classes = await source_db.fetch(query)
-    target_classes = await target_db.fetch(query)
-
-    difference_from_source = set(source_classes) - set(target_classes)
-    difference_from_target = set(target_classes) - set(source_classes)
-    difference = difference_from_source | difference_from_target
-
-    if difference:
-        relnames = ', '.join({shlex.quote(class_['relname']) for class_ in difference})
-        return f"relation schemas out of sync: {relnames}"
+    if source_schema != target_schema:
+        differ = difflib.HtmlDiff(tabsize=4)
+        with tempfile.NamedTemporaryFile(
+            prefix='ivory-schema-diff-', suffix='.html', delete=False, mode='w+'
+        ) as f:
+            content = differ.make_file(
+                fromlines=source_schema.splitlines(),
+                tolines=target_schema.splitlines(),
+                fromdesc="Source schema",
+                todesc="Target schema",
+            )
+            f.write(content)
+        return f"relation schemas out of sync, see {f.name!r}"
 
     return None
 
