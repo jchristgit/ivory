@@ -1,7 +1,7 @@
 """Pre-flight checks."""
 
 from gettext import ngettext
-from ipaddress import IPv4Address, IPv4Network
+from ipaddress import IPv4Network
 from typing import AsyncGenerator, Optional, NamedTuple
 
 import asyncpg

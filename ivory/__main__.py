@@ -12,7 +12,7 @@ def main() -> int:
     parser = cli.make_parser(description=__doc__)
     args = parser.parse_args()
     logging.basicConfig(
-        format='%(asctime)s | %(levelname)-5s | %(name)-20s | %(message)s',
+        format='%(asctime)s | %(levelname)-7s | %(name)-20s | %(message)s',
         level=getattr(logging, args.log_level),
     )
     coroutine = args.func(args)

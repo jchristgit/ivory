@@ -36,9 +36,13 @@ def make_parser(**kwargs) -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(required=True, dest='subcommand')
     parser_check = subparsers.add_parser('check', help=check.__doc__)
+    parser_check.description = check.run.__doc__
     parser_check.set_defaults(func=check.run)
+    check.add_arguments(parser_check)
 
     parser_copyschema = subparsers.add_parser('copyschema', help=copyschema.__doc__)
+    parser_copyschema.description = copyschema.run.__doc__
     parser_copyschema.set_defaults(func=copyschema.run)
+    copyschema.add_arguments(parser_copyschema)
 
     return parser
