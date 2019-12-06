@@ -26,7 +26,9 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         '--skip-checks',
         help=(
             "Skip pre-flight check execution. "
-            "Only use this switch if you know what you are doing."
+            "Only use this switch if you know what you are doing. For instance, "
+            "check failure on the REPLICA IDENTITY check being ignored will "
+            "result in queries on affected tables resulting in errors."
         ),
         default=False,
         action='store_true',
