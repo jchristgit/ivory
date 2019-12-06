@@ -174,6 +174,10 @@ async def create_publication(
         await source_db.execute(
             f"CREATE PUBLICATION {shlex.quote(publication_name)} FOR ALL TABLES"
         )
+        await source_db.execute(
+            f"COMMENT ON PUBLICATION {shlex.quote(publication_name)} "
+            f"IS 'ivory managed (created on {datetime.utcnow().isoformat()})'"
+        )
         log.info("Created publication %r.", publication_name)
 
     else:
@@ -207,7 +211,7 @@ async def create_subscription(
     """Create a subscription from the target database to the source database."""
 
     active_subscription = await target_db.fetchrow(
-        "SELECT * FROM pg_catalog.pg_subscription WHERE subname = $1", publication_name
+        "SELECT * FROM pg_catalog.pg_subscription WHERE subname = $1", subscription_name
     )
 
     if active_subscription is None:
@@ -223,12 +227,17 @@ async def create_subscription(
         try:
             await target_db.execute(
                 f"""
-                CREATE SUBSCRIPTION {shlex.quote(subscription_name).replace("'", '"')}
+                CREATE SUBSCRIPTION {shlex.quote(subscription_name)}
                     CONNECTION {shlex.quote(conninfo)}
                     PUBLICATION {shlex.quote(publication_name)}
                 """
             )
-        except asyncpg.exceptions.InternalServerError as err:
+
+            await target_db.execute(
+                f"COMMENT ON SUBSCRIPTION {shlex.quote(subscription_name)} "
+                f"IS 'ivory managed (created on {datetime.utcnow().isoformat()})'"
+            )
+        except asyncpg.exceptions.PostgresError as err:
             log.exception("Unable to create subscription:", exc_info=err)
             return 1
         else:
