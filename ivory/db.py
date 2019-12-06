@@ -1,7 +1,23 @@
 import argparse
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Literal, Tuple
 
 import asyncpg  # type: ignore
+
+
+async def connect_single(
+    args: argparse.ArgumentParser,
+    kind: Literal['source', 'target'],
+    override: Dict[str, Any] = {},
+) -> asyncpg.Connection:
+    options = {
+        'host': getattr(args, f'{kind}_host'),
+        'port': getattr(args, f'{kind}_port'),
+        'database': getattr(args, f'{kind}_dbname'),
+        'user': getattr(args, f'{kind}_user'),
+        'password': getattr(args, f'{kind}_password'),
+        **override,
+    }
+    return await asyncpg.connect(**options)
 
 
 async def connect(
@@ -10,25 +26,7 @@ async def connect(
     target_override: Dict[str, Any] = {},
 ) -> Tuple[asyncpg.Connection, asyncpg.Connection]:
 
-    source_options = {
-        'host': args.source_host,
-        'port': args.source_port,
-        'database': args.source_dbname,
-        'user': args.source_user,
-        'password': args.source_password,
-        **source_override,
-    }
-
-    target_options = {
-        'host': args.target_host,
-        'port': args.target_port,
-        'database': args.target_dbname,
-        'user': args.target_user,
-        'password': args.target_password,
-        **target_override,
-    }
-
-    source = await asyncpg.connect(**source_options)
-    target = await asyncpg.connect(**target_options)
+    source = await connect_single(args=args, kind='source', override=source_override)
+    target = await connect_single(args=args, kind='target', override=target_override)
 
     return (source, target)

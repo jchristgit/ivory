@@ -40,12 +40,12 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         '--publication-name',
         help="The name of the publication created on the source database.",
-        default='ivory_publication',
+        default=constants.DEFAULT_PUBLICATION_NAME,
     )
     parser.add_argument(
         '--subscription-name',
         help="The name of the subscription created on the target database.",
-        default='ivory_subscription',
+        default=constants.DEFAULT_SUBSCRIPTION_NAME,
     )
     parser.add_argument(
         '--replication-password',
@@ -213,17 +213,16 @@ async def create_subscription(
     active_subscription = await target_db.fetchrow(
         "SELECT * FROM pg_catalog.pg_subscription WHERE subname = $1", subscription_name
     )
+    conninfo = (
+        f"host={shlex.quote(remove_socket(source_host))} "
+        f"port={source_port} "
+        f"dbname={shlex.quote(source_dbname)} "
+        f"application_name=ivory_replicator "
+        f"user={shlex.quote(constants.REPLICATION_USERNAME)} "
+        f"password={shlex.quote(password)}"
+    )
 
     if active_subscription is None:
-        conninfo = (
-            f"host={shlex.quote(remove_socket(source_host))} "
-            f"port={source_port} "
-            f"dbname={shlex.quote(source_dbname)} "
-            f"application_name=ivory_replicator "
-            f"user={shlex.quote(constants.REPLICATION_USERNAME)} "
-            f"password={shlex.quote(password)}"
-        )
-
         try:
             await target_db.execute(
                 f"""
@@ -244,7 +243,13 @@ async def create_subscription(
             log.info("Subscription %r created.", subscription_name)
 
     else:
-        log.info("Subscription with expected name found.")
+        await target_db.execute(
+            f"""
+            ALTER SUBSCRIPTION {shlex.quote(subscription_name)} CONNECTION {shlex.quote(conninfo)};
+            ALTER SUBSCRIPTION {shlex.quote(subscription_name)} SET PUBLICATION {shlex.quote(publication_name)};
+            """
+        )
+        log.info("Existing subscription updated.")
         if not active_subscription['subenabled']:
             log.warning("Active subscription is not enabled.")
 
