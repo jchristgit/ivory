@@ -1,5 +1,6 @@
 """Pre-flight checks."""
 
+import shlex
 from gettext import ngettext
 from ipaddress import IPv4Network
 from typing import AsyncGenerator, Optional, NamedTuple
@@ -31,7 +32,7 @@ async def find_problems(
         check_allows_replication_connections,
         check_replica_identity_set,
         check_schema_sync,
-        check_database_encoding,
+        check_database_options,
     )
 
     for check in checks:
@@ -114,7 +115,26 @@ async def check_schema_sync(
 
     query = """
     SELECT
-        c.*
+        c.relname,
+        (SELECT usename FROM pg_catalog.pg_user WHERE usesysid = c.relowner),
+        c.relhasindex,
+        c.relisshared,
+        c.relpersistence,
+        c.relkind,
+        c.relnatts,
+        c.relchecks,
+        c.relhasrules,
+        c.relhastriggers,
+        c.relhassubclass,
+        c.relrowsecurity,
+        c.relforcerowsecurity,
+        c.relispopulated,
+        c.relreplident,
+        c.relispartition,
+        c.relrewrite,
+        c.relacl,
+        c.reloptions,
+        c.relpartbound
     FROM
         pg_class c
         JOIN pg_namespace n ON c.relnamespace = n.oid
@@ -132,13 +152,44 @@ async def check_schema_sync(
     difference = difference_from_source | difference_from_target
 
     if difference:
-        relnames = ', '.join(class_['relname'] for class_ in difference)
+        relnames = ', '.join({shlex.quote(class_['relname']) for class_ in difference})
         return f"relation schemas out of sync: {relnames}"
 
     return None
 
 
-async def check_database_encoding(
+async def check_database_options(
     source_db: asyncpg.Connection, target_db: asyncpg.Connection
 ) -> Optional[str]:
-    """Source and target databases have the same collation and encoding."""
+    """Source and target databases have the same options set."""
+
+    query = """
+    SELECT
+        datconnlimit AS "connection limit",
+        pg_encoding_to_char(encoding) AS "encoding",
+        (
+            SELECT
+                usename
+            FROM
+                pg_catalog.pg_user
+            WHERE
+                usesysid = datdba
+        ) AS "database owner",
+        datcollate AS "collation",
+        datctype AS "ctype"
+    FROM
+        pg_database
+    WHERE
+        datname = current_database()
+    """
+
+    source_options = await source_db.fetchrow(query)
+    target_options = await target_db.fetchrow(query)
+
+    for key in source_options.keys():
+        source_value = source_options[key]
+        target_value = target_options[key]
+
+        if source_value != target_value:
+            return f"database {key} is {source_value!r} on source, but {target_value!r} on target"
+    return None
