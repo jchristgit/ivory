@@ -104,7 +104,7 @@ async def run(args: argparse.Namespace) -> int:
     states = await target_db.fetch(state_sql, args.subscription_name)
 
     for (name, state) in states:
-        if state != 'r':
+        if state != b'r':
             log.error(
                 "Relation %r is not ready: %s (srsubstate=%r).",
                 name,
