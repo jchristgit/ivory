@@ -3,7 +3,7 @@ from typing import Literal
 
 from ivory.commands import check
 from ivory.commands import copyschema
-from ivory.commands import createreplication
+from ivory.commands import replication
 from ivory.helpers import expanded_value
 
 
@@ -74,11 +74,9 @@ def make_parser(**kwargs) -> argparse.ArgumentParser:
     parser_copyschema.set_defaults(func=copyschema.run)
     copyschema.add_arguments(parser_copyschema)
 
-    parser_createreplication = subparsers.add_parser(
-        'createreplication', help=createreplication.__doc__
+    parser_replication = subparsers.add_parser(
+        'replication', help="Manage logical replication."
     )
-    parser_createreplication.description = createreplication.run.__doc__
-    parser_createreplication.set_defaults(func=createreplication.run)
-    createreplication.add_arguments(parser_createreplication)
+    replication.configure_parser(parser_replication)
 
     return parser
