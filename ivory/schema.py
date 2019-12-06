@@ -44,6 +44,8 @@ async def dump(db: asyncpg.Connection) -> str:
                 '--dbname',
                 db._params.database,
                 '--schema-only',
+                '--no-publications',
+                '--no-subscriptions',
             ),
             text=True,
         )

@@ -106,4 +106,7 @@ async def run(args: argparse.Namespace) -> int:
     await target_db.execute(sql)
     log.info("Applied schema on target.")
 
+    await source_db.close()
+    await target_db.close()
+
     return 0

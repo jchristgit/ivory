@@ -4,14 +4,24 @@ variables:
 test:
   stage: test
   image: python:3.8
+  services:
+    - name: postgres
+      alias: source
+    - name: postgres
+      alias: target
   before_script:
-    - pip install -r requirements-dev.txt
+    - pip install -r requirements-dev.txt -r requirements.in
   script:
-    - make
+    - make PYTESTARGS='--junit-xml junit.xml'
   cache:
     paths:
       - .cache/pip
       - ~/.cache/black
+  artifacts:
+    reports:
+      junit:
+        - junit.xml
+  coverage: '/TOTAL\s+\d+\s+\d+\s+\d+\s+\d+\s+(\d+)%/'
 
 
 # vim: sw=2 ts=2:

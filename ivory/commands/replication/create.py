@@ -2,9 +2,8 @@
 
 import argparse
 import logging
+import os
 import os.path
-import random
-import secrets
 import shlex
 from datetime import datetime
 
@@ -14,6 +13,7 @@ from ivory import constants
 from ivory import check
 from ivory import db
 from ivory import helpers
+from ivory import secrets
 
 
 log = logging.getLogger(__name__)
@@ -82,8 +82,8 @@ async def run(args: argparse.Namespace) -> int:
     else:
         log.warning("Pre-flight checks skipped.")
 
-    replication_password = args.replication_password or secrets.token_hex(
-        nbytes=random.randrange(40, 80)
+    replication_password = secrets.get_replication_password(
+        source_hostname=args.source_host, from_args=args.replication_password
     )
 
     # if err != nil
@@ -242,18 +242,26 @@ async def create_subscription(
             log.info("Subscription %r created.", subscription_name)
 
     else:
-        await target_db.execute(
-            f"""
+        if active_subscription['subconninfo'] != conninfo:
+            await target_db.execute(
+                f"""
             ALTER SUBSCRIPTION
                 {shlex.quote(subscription_name)}
                 CONNECTION {shlex.quote(conninfo)};
-
-            ALTER SUBSCRIPTION
-                {shlex.quote(subscription_name)}
-                SET PUBLICATION {shlex.quote(publication_name)};
             """
-        )
-        log.info("Existing subscription updated.")
+            )
+            log.info("Updated connection info of existing subscription.")
+
+        if publication_name not in active_subscription['subpublications']:
+            await target_db.execute(
+                f"""
+                ALTER SUBSCRIPTION
+                    {shlex.quote(subscription_name)}
+                    SET PUBLICATION {shlex.quote(publication_name)};
+                """
+            )
+            log.info("Updated publication name of existing subscription.")
+
         if not active_subscription['subenabled']:
             log.warning("Active subscription is not enabled.")
 

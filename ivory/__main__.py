@@ -3,11 +3,12 @@
 import asyncio
 import logging
 import sys
+from typing import Optional, List
 
 from . import cli
 
 
-def main() -> int:
+def main(args: Optional[List[str]] = None) -> int:
     parser = cli.make_parser(description=__doc__)
     args = parser.parse_args()
     logging.basicConfig(

@@ -117,12 +117,24 @@ async def run(args: argparse.Namespace) -> int:
 
 
 def substate_to_human(value: Literal[b'i', b'd', b's', b'r']) -> str:
-    if value == b'i':
-        return 'initialize'
-    elif value == b'd':
-        return 'data is being copied'
-    elif value == b's':
-        return 'synchronized'
-    elif value == b'r':
-        return 'ready (normal replication)'
+    """Convert PostgreSQL `srsubstate` to a human-readable value.
+
+    Example:
+
+        >>> substate_to_human(b'd')
+        'data is being copied'
+        >>> substate_to_human(b'x')  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+            ...
+        ValueError: unknown value: b'x'
+    """
+
+    mapping = {
+        b'i': 'initializing',
+        b'd': 'data is being copied',
+        b's': 'synchronized',
+        b'r': 'ready (normal replication)',
+    }
+    if value in mapping:
+        return mapping[value]
     raise ValueError(f"unknown value: {value!r}")

@@ -1,0 +1,101 @@
+from unittest.mock import AsyncMock, MagicMock
+
+import asyncpg
+import pytest
+
+from ivory import check
+
+
+@pytest.mark.asyncio
+async def test_find_problems_finds_nothing_on_empty_database(
+    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+) -> None:
+    async for result in check.find_problems(source_db, target_db):
+        assert result.error is None
+
+
+@pytest.mark.asyncio
+async def test_complains_about_wal_level_not_logical(
+    target_db: asyncpg.Connection,
+) -> None:
+    source_db = MagicMock(spec=asyncpg.Connection)
+    source_db.fetchrow = AsyncMock(return_value=('not-logical',))
+
+    result = await check.check_has_correct_wal_level(
+        source_db=source_db, target_db=target_db
+    )
+    assert result.endswith("needs `wal_level = logical`")
+
+
+@pytest.mark.asyncio
+async def test_complains_about_denied_replication_connection(
+    target_db: asyncpg.Connection,
+) -> None:
+    source_db = MagicMock(spec=asyncpg.Connection)
+    source_db.fetch = AsyncMock(return_value=())
+
+    result = await check.check_allows_replication_connections(
+        source_db=source_db, target_db=target_db
+    )
+    assert result.startswith("no pg_hba conf entry allows replication connections")
+
+
+@pytest.mark.asyncio
+async def test_complains_about_missing_replica_identity(
+    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+) -> None:
+    tx = source_db.transaction()
+    try:
+        await tx.start()
+        await source_db.execute("CREATE TABLE without_identity (foo INT)")
+        result = await check.check_replica_identity_set(
+            source_db=source_db, target_db=target_db
+        )
+        assert (
+            result
+            == "missing primary key / REPLICA IDENTITY on table public.without_identity"
+        )
+    finally:
+        await tx.rollback()
+
+
+@pytest.mark.asyncio
+async def test_complains_about_out_of_sync_schemas(
+    source_db: asyncpg.Connection, target_db: asyncpg.Connection
+) -> None:
+    try:
+        await source_db.execute("CREATE TABLE unsynced_table (bar INT PRIMARY KEY)")
+        result = await check.check_schema_sync(source_db=source_db, target_db=target_db)
+        assert result.startswith("relation schemas out of sync, see ")
+    finally:
+        await source_db.execute("DROP TABLE unsynced_table")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('limit', (3,))
+async def test_complains_about_mismatched_database_options(
+    source_db: asyncpg.Connection, target_db: asyncpg.Connection, limit: int
+) -> None:
+    (dbname,) = await source_db.fetchrow("SELECT current_database()")
+    (target_limit,) = await target_db.fetchrow(
+        "SELECT datconnlimit FROM pg_database WHERE datname = current_database()"
+    )
+
+    if limit == target_limit:
+        limit += 1
+
+    (old_limit,) = await source_db.fetchrow(
+        "SELECT datconnlimit FROM pg_database WHERE datname = $1", dbname
+    )
+
+    try:
+        await source_db.execute(f"ALTER DATABASE {dbname} CONNECTION LIMIT {limit}")
+        result = await check.check_database_options(
+            source_db=source_db, target_db=target_db
+        )
+        assert result == (
+            f"database connection limit is {limit} "
+            f"on source, but {target_limit} on target"
+        )
+    finally:
+        await source_db.execute(f"ALTER DATABASE {dbname} CONNECTION LIMIT {old_limit}")
