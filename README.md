@@ -90,4 +90,34 @@ optional arguments:
   -h, --help            show this help message and exit
 ```
 
+## Running tests
+
+Install development requirements with `pip install -r requirements-dev.txt`.
+Create a source and a target database cluster via `pg_createcluster`.  Allow the
+ivory replication user md5 authentication for connections to the source database
+by adding the following to `pg_hba.conf` and reloading it:
+
+```sh
+local   all             ivory_replicator                        md5
+```
+
+Set environment variables for connections. For example, assuming the source user
+is called `ivorytest` and the database is named `ivorytest`, whilst the source
+cluster lives on port 5433 and the target cluster on port 5434, the following
+would be valid environment variables:
+
+```sh
+SOURCE_USER=ivorytest
+SOURCE_HOST=/var/run/postgresql
+SOURCE_DBNAME=ivorytest
+SOURCE_PORT=5433
+
+TARGET_USER=ivorytest
+TARGET_HOST=/var/run/postgresql
+TARGET_DBNAME=ivorytest
+TARGET_PORT=5434
+```
+
+The tests clean up after themselves unless some severe failure happens.
+
 <!-- vim: set ts=2 sw=2 textwidth=80: -->
