@@ -21,15 +21,16 @@ usage: ivory [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
              [--target-port TARGET_PORT] [--target-user TARGET_USER]
              [--target-password TARGET_PASSWORD]
              [--target-dbname TARGET_DBNAME]
-             {check,copyschema,replication} ...
+             {check,copyschema,replication,syncsequences} ...
 
 Manages PostgreSQL logical replication.
 
 positional arguments:
-  {check,copyschema,replication}
+  {check,copyschema,replication,syncsequences}
     check               Check whether databases are ready.
     copyschema          Synchronize database schemas.
     replication         Manage logical replication.
+    syncsequences       Synchronize sequence values.
 
 optional arguments:
   -h, --help            show this help message and exit

@@ -5,6 +5,7 @@ from typing import Any, Literal
 from ivory.commands import check
 from ivory.commands import copyschema
 from ivory.commands import replication
+from ivory.commands import syncsequences
 
 
 def add_database_options(
@@ -89,5 +90,12 @@ def make_parser(**kwargs: Any) -> argparse.ArgumentParser:
         'replication', help="Manage logical replication."
     )
     replication.configure_parser(parser_replication)
+
+    parser_syncsequences = subparsers.add_parser(
+        'syncsequences', help=syncsequences.__doc__
+    )
+    parser_syncsequences.description = syncsequences.run.__doc__
+    parser_syncsequences.set_defaults(func=syncsequences.run)
+    syncsequences.add_arguments(parser_syncsequences)
 
     return parser
