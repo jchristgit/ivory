@@ -10,6 +10,11 @@ target database. Management of the following is performed:
 - Checking for discrepancies between source and target database
 - Copying the source database schema to the target database
 - Setting up a logical replication connection
+- Monitoring a logical replication connection
+- Starting & stopping logical replication
+- Synchronizing sequence values (see [Logical Replication
+  Restrictions](https://www.postgresql.org/docs/12/logical-replication-restrictions.html))
+- Cleaning up a logical replication setup
 
 ## Usage
 
