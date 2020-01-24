@@ -16,7 +16,7 @@ def add_database_options(
     group.add_argument(
         f'--{kind}-host',
         help=(
-            f"{description_key} database host to connect to. Read from "
+            f"{description_key} database host to connect to. Read "
             f"from ${env_key}_HOST."
         ),
         default=os.getenv(f"{env_key}_HOST"),
@@ -24,7 +24,7 @@ def add_database_options(
     group.add_argument(
         f'--{kind}-port',
         help=(
-            f"{description_key} database port to connect to. Read from "
+            f"{description_key} database port to connect to. Read "
             f"from ${env_key}_PORT."
         ),
         default=os.getenv(f'{env_key}_PORT', 5432),
@@ -41,16 +41,16 @@ def add_database_options(
     group.add_argument(
         f'--{kind}-password',
         help=(
-            f"Matching password for the {kind} database user. Read from "
-            f"${env_key}_PASSWORD."
+            f"Matching password for the {kind} database user. Read "
+            f"from ${env_key}_PASSWORD."
         ),
         default=os.getenv(f'{env_key}_PASSWORD'),
     )
     group.add_argument(
         f'--{kind}-dbname',
         help=(
-            f"{description_key} database name to connect to. Read from "
-            f"${env_key}_DBNAME."
+            f"{description_key} database name to connect to. Read "
+            f"from ${env_key}_DBNAME."
         ),
         default=os.getenv(f'{env_key}_DBNAME'),
     )
