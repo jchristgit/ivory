@@ -16,7 +16,7 @@ test:
     - unset SOURCE_HOST SOURCE_PORT SOURCE_DBNAME SOURCE_USER SOURCE_PASSWORD
     - unset TARGET_HOST TARGET_PORT TARGET_DBNAME TARGET_USER TARGET_PASSWORD
 
-    - export SOURCE_HOST=source TARGET_HOST=target
+    - export SOURCE_HOST=source SOURCE_PASSWORD=source TARGET_HOST=target TARGET_PASSWORD=target
     - pip install -r requirements-dev.txt -r requirements.in
   script:
     - make PYTESTARGS='--junit-xml junit.xml'
@@ -24,6 +24,8 @@ test:
     POSTGRES_USER: root
     SOURCE_HOST: source
     TARGET_HOST: target
+    SOURCE_PASSWORD: source
+    TARGET_PASSWORD: target
   cache:
     paths:
       - .cache/pip
