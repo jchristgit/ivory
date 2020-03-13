@@ -27,6 +27,8 @@ async def connect(
 ) -> Tuple[asyncpg.Connection, asyncpg.Connection]:
 
     source = await connect_single(args=args, kind='source', override=source_override)
+    await source.execute("SET application_name = 'ivory'")
     target = await connect_single(args=args, kind='target', override=target_override)
+    await target.execute("SET application_name = 'ivory'")
 
     return (source, target)
