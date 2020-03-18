@@ -57,7 +57,7 @@ async def check_has_correct_wal_level(
     )
     if level == 'logical':
         return None
-    return f"master has `wal_level = {level}`, needs `wal_level = logical`"
+    return f"master (source database) has `wal_level = {level}`, needs `wal_level = logical`"
 
 
 async def check_allows_replication_connections(
@@ -94,7 +94,8 @@ async def check_allows_replication_connections(
 
     return (
         "no pg_hba conf entry allows replication "
-        f"connections from {target_ip} via user {REPLICATION_USERNAME!r}"
+        f"connections from {target_ip} via user {REPLICATION_USERNAME!r} "
+        "on master (source)"
     )
 
 
