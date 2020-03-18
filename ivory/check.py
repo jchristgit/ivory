@@ -120,6 +120,7 @@ async def check_replica_identity_set(
             AND NOT nspname LIKE ANY (ARRAY[E'pg\\_%', 'information_schema'])
             AND NOT EXISTS (SELECT * FROM pg_index WHERE indrelid = c.oid
                     AND indisunique AND indisvalid AND indisready AND indislive AND indisprimary)
+            AND c.relreplident != 'f'  -- REPLICA IDENTITY FULL, all columns.
         """
     )
 
