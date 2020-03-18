@@ -68,10 +68,28 @@ def make_parser(**kwargs: Any) -> argparse.ArgumentParser:
         help="Level to log at.",
     )
 
-    source_group = parser.add_argument_group(title='source database options')
+    source_group = parser.add_argument_group(
+        title='source database options',
+        description=(
+            "Options for the source database, which will be the "
+            "'publisher' in logical replication terminology. In "
+            "classic streaming replication setups, this would "
+            "be the master."
+        ),
+    )
     add_database_options(group=source_group, kind='source')
 
-    target_group = parser.add_argument_group(title='target database options')
+    target_group = parser.add_argument_group(
+        title='target database options',
+        description=(
+            "Options for the target database, which will be the "
+            "'subscriber' in logical replication terminology. In "
+            "classic streaming replication setups, this would be "
+            "the slave. Ivory can manage multiple targets in "
+            "subsequent invocations, however, a different "
+            "`--subscription-name` needs to be used."
+        ),
+    )
     add_database_options(group=target_group, kind='target')
 
     subparsers = parser.add_subparsers(required=True, dest='subcommand')
