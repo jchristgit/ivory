@@ -22,10 +22,11 @@ test:
     - make PYTESTARGS='--junit-xml junit.xml'
   variables:
     POSTGRES_USER: root
+    POSTGRES_PASSWORD: password
     SOURCE_HOST: source
     TARGET_HOST: target
-    SOURCE_PASSWORD: source
-    TARGET_PASSWORD: target
+    SOURCE_PASSWORD: password
+    TARGET_PASSWORD: password
   cache:
     paths:
       - .cache/pip
