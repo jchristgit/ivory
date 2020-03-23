@@ -46,7 +46,7 @@ async def dump(
         schema = subprocess.check_output(cmdline, text=True,)
 
         with tempfile.NamedTemporaryFile(
-            prefix='ivory-schema', mode='w+', suffix='.sql', delete=False
+            prefix='ivory-schema-', mode='w+', suffix='.sql', delete=False
         ) as f:
             f.write(schema)
 
