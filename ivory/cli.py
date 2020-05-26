@@ -1,6 +1,6 @@
 import argparse
 import os
-from typing import Any, Literal
+from typing import Any
 
 from ivory.commands import check
 from ivory.commands import copyschema
@@ -8,9 +8,7 @@ from ivory.commands import replication
 from ivory.commands import syncsequences
 
 
-def add_database_options(
-    group: argparse._ArgumentGroup, kind: Literal['source', 'target']
-) -> None:
+def add_database_options(group: argparse._ArgumentGroup, kind: str) -> None:
     env_key = kind.upper()
     description_key = kind.title()
     group.add_argument(

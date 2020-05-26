@@ -1,13 +1,11 @@
 import argparse
-from typing import Any, Dict, Literal, Tuple
+from typing import Any, Dict, Tuple
 
 import asyncpg  # type: ignore
 
 
 async def connect_single(
-    args: argparse.Namespace,
-    kind: Literal['source', 'target'],
-    override: Dict[str, Any] = {},
+    args: argparse.Namespace, kind: str, override: Dict[str, Any] = {},
 ) -> asyncpg.Connection:
     options = {
         'host': getattr(args, f'{kind}_host'),
