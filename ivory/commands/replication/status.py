@@ -89,8 +89,24 @@ async def run(args: argparse.Namespace) -> int:
         log.error("Missing replication slot with name %r.", args.subscription_name)
         rc = 1
     elif not slot['active']:
-        log.error("Replication slot %r is not active.", args.subscription_name)
-        rc = 1
+
+        # See src/backend/replication/logical/tablesync.c
+        # at 5832396432b1ce8349a0028b52295a9874014416:
+        # PostgreSQL creates a temporary slot to synchronize tables with.
+        sync_slot = await source_db.fetchrow(
+            "SELECT * FROM pg_replication_slots WHERE slot_name LIKE $1 || '%_sync_%'",
+            args.subscription_name,
+        )
+
+        if sync_slot is not None and sync_slot['active']:
+            log.warning(
+                "Replication slot %r is not active, but active sync slot %r was found.",
+                args.subscription_name,
+                sync_slot['slot_name'],
+            )
+        else:
+            log.error("Replication slot %r is not active.", args.subscription_name)
+            rc = 1
     else:
         log.info("Replication slot is active.")
 
