@@ -24,6 +24,15 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         help="The name of the subscription on the target database.",
         default=constants.DEFAULT_SUBSCRIPTION_NAME,
     )
+    parser.add_argument(
+        '--no-drop-user',
+        help=(
+            "Do not drop the replication user. "
+            "Useful for multi-database replication scenarios."
+        ),
+        action='store_true',
+        default=False,
+    )
 
 
 async def run(args: argparse.Namespace) -> int:
@@ -64,9 +73,10 @@ async def run(args: argparse.Namespace) -> int:
     )
 
     if replication_user is not None:
-        await source_db.execute(
-            f"DROP USER {shlex.quote(constants.REPLICATION_USERNAME)}"
-        )
+        if not args.no_drop_user:
+            await source_db.execute(
+                f"DROP USER {shlex.quote(constants.REPLICATION_USERNAME)}"
+            )
 
         log.info(
             "Dropped replication user %r on source database.",
