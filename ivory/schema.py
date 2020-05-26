@@ -43,7 +43,12 @@ async def dump(
         if dbname:
             cmdline.extend(['--dbname', dbname])
 
-        schema = subprocess.check_output(cmdline, text=True,)
+        # Ignore the pg_dump version dumped with to allow easier comparisons.
+        schema = '\n'.join(
+            line
+            for line in subprocess.check_output(cmdline, text=True).splitlines()
+            if not line.startswith('-- Dumped ')
+        )
 
         with tempfile.NamedTemporaryFile(
             prefix='ivory-schema-', mode='w+', suffix='.sql', delete=False
