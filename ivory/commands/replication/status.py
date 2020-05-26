@@ -3,7 +3,6 @@
 import argparse
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Literal
 
 from ivory import constants
 from ivory import db
@@ -46,14 +45,20 @@ async def run(args: argparse.Namespace) -> int:
 
     (my_lsn,) = await source_db.fetchrow('SELECT pg_current_wal_lsn()')
 
-    # "The `dt` argument is ignored." But if you don't pass it, it crashes.
-    reply_utcoffset = replication_stats['reply_time'].tzinfo.utcoffset(None)
+    if 'reply_time' in replication_stats:
+        # "The `dt` argument is ignored." But if you don't pass it, it crashes.
+        reply_utcoffset = replication_stats['reply_time'].tzinfo.utcoffset(None)
 
-    # timezones and unicode
-    # horror
-    sane_reply_time = replication_stats['reply_time'] - reply_utcoffset
-    last_reply_delta = datetime.now(timezone.utc) - sane_reply_time
-    if last_reply_delta > timedelta(minutes=5):
+        # timezones and unicode
+        # horror
+        sane_reply_time = replication_stats['reply_time'] - reply_utcoffset
+        last_reply_delta = datetime.now(timezone.utc) - sane_reply_time
+    else:
+        last_reply_delta = replication_stats['replay_lag']
+
+    if last_reply_delta is None:
+        log.info("No replay lag detected.")
+    elif last_reply_delta > timedelta(minutes=5):
         log.error(
             "Last reply from standby received more than 5 minutes ago: %r.",
             last_reply_delta,
@@ -104,7 +109,26 @@ async def run(args: argparse.Namespace) -> int:
     states = await target_db.fetch(state_sql, args.subscription_name)
 
     for (name, state) in states:
-        if state != b'r':
+        if state == b'd':
+            # If we're on the initial sync, display how far in.
+            query = """
+            SELECT
+                pg_total_relation_size($1),
+                pg_size_pretty(pg_total_relation_size($1))
+            """
+
+            (target, target_pretty) = await source_db.fetchrow(query, name)
+            (current, current_pretty) = await target_db.fetchrow(query, name)
+            log.error(
+                "Relation %r is being copied over: %s / %s (%.2f %%).",
+                name,
+                current_pretty,
+                target_pretty,
+                (current / target) * 100,
+            )
+            rc = 1
+
+        elif state != b'r':
             log.error(
                 "Relation %r is not ready: %s (srsubstate=%r).",
                 name,
@@ -116,7 +140,7 @@ async def run(args: argparse.Namespace) -> int:
     return rc
 
 
-def substate_to_human(value: Literal[b'i', b'd', b's', b'r']) -> str:
+def substate_to_human(value: bytes) -> str:
     """Convert PostgreSQL `srsubstate` to a human-readable value.
 
     Example:
