@@ -60,6 +60,18 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         action='store_true',
         default=False,
     )
+    parser.add_argument(
+        '-n',
+        '--dry-run',
+        help=(
+            "Only print values being set, do not set any sequence "
+            "values. Note that the source database sequences will "
+            "still be incremented since the current value needs to "
+            "be fetched via `nextval`."
+        ),
+        action='store_true',
+        default=False,
+    )
 
 
 async def run(args: argparse.Namespace) -> int:
@@ -76,6 +88,9 @@ async def run(args: argparse.Namespace) -> int:
 
     Note that running this command will always consume at least one sequence
     item on both databases via the `nextval` function of PostgreSQL.
+
+    Using log level DEBUG here will allow you to see current and target
+    sequence values.
     """
 
     (source_db, target_db) = await db.connect(args)
@@ -94,10 +109,15 @@ async def run(args: argparse.Namespace) -> int:
 
     if args.equal:
         for sequence, lastval in source_sequence_values.items():
-            await target_db.execute(
-                "SELECT setval($1::regclass, $2, false)", sequence, lastval
-            )
-            log.debug("Set target sequence %r value to %r.", sequence, lastval)
+            if args.dry_run:
+                log.debug(
+                    "Would set target sequence %r value to %r.", sequence, lastval
+                )
+            else:
+                await target_db.execute(
+                    "SELECT setval($1::regclass, $2, false)", sequence, lastval
+                )
+                log.debug("Set target sequence %r value to %r.", sequence, lastval)
 
     else:
         await asyncio.sleep(args.sample_pause)
@@ -122,10 +142,15 @@ async def run(args: argparse.Namespace) -> int:
         }
 
         for sequence, lastval in sequence_values.items():
-            await target_db.execute(
-                "SELECT setval($1::regclass, $2)", sequence, lastval
-            )
-            log.debug("Set target sequence %r value to %r.", sequence, lastval)
+            if args.dry_run:
+                log.debug(
+                    "Would set target sequence %r value to %r.", sequence, lastval
+                )
+            else:
+                await target_db.execute(
+                    "SELECT setval($1::regclass, $2)", sequence, lastval
+                )
+                log.debug("Set target sequence %r value to %r.", sequence, lastval)
 
     if not sequences:
         log.warning("No sequences found.")
