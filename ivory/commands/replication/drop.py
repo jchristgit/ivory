@@ -78,9 +78,9 @@ async def run(args: argparse.Namespace) -> int:
                 f"DROP USER {shlex.quote(constants.REPLICATION_USERNAME)}"
             )
 
-        log.info(
-            "Dropped replication user %r on source database.",
-            constants.REPLICATION_USERNAME,
-        )
+            log.info(
+                "Dropped replication user %r on source database.",
+                constants.REPLICATION_USERNAME,
+            )
 
     return 0
