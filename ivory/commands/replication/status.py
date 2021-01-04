@@ -19,6 +19,18 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         help="The name of the subscription on the target database.",
         default=constants.DEFAULT_SUBSCRIPTION_NAME,
     )
+    parser.add_argument(
+        '--collapse-initializing-relations',
+        help=(
+            "Collapse relations that are in the 'i' state to a single line "
+            "instead of printing them one-by-one. Useful for progress "
+            "displays, such as when running `ivory` through `watch`. "
+            "Relations in initializing state will be printed at the end "
+            "of output."
+        ),
+        default=False,
+        action='store_true',
+    )
 
 
 async def run(args: argparse.Namespace) -> int:
@@ -123,6 +135,7 @@ async def run(args: argparse.Namespace) -> int:
     """
 
     states = await target_db.fetch(state_sql, args.subscription_name)
+    initializing_relations = []
 
     for (name, state) in states:
         if state == b'd':
@@ -144,6 +157,10 @@ async def run(args: argparse.Namespace) -> int:
             )
             rc = 1
 
+        elif state == b'i' and args.collapse_initializing_relations:
+            initializing_relations.append(name)
+            rc = 1
+
         elif state != b'r':
             log.error(
                 "Relation %r is not ready: %s (srsubstate=%r).",
@@ -153,6 +170,8 @@ async def run(args: argparse.Namespace) -> int:
             )
             rc = 1
 
+    if initializing_relations:
+        log.error("%d relations are still initializing.", len(initializing_relations))
     return rc
 
 
