@@ -217,7 +217,7 @@ async def create_subscription(
     # writing UTF8-encoded values to such a database is a good thing to do.
     client_encoding = await source_db.fetchrow(
         "SELECT pg_encoding_to_char(encoding) FROM pg_database WHERE datname = $1",
-        source_dbname
+        source_dbname,
     )
 
     active_subscription = await target_db.fetchrow(
