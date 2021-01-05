@@ -105,6 +105,7 @@ async def run(args: argparse.Namespace) -> int:
         return rc
 
     rc = await create_subscription(
+        source_db=source_db,
         target_db=target_db,
         publication_name=args.publication_name,
         subscription_name=args.subscription_name,
@@ -199,6 +200,7 @@ async def create_publication(
 
 
 async def create_subscription(
+    source_db: asyncpg.Connection,
     target_db: asyncpg.Connection,
     publication_name: str,
     subscription_name: str,
@@ -209,6 +211,15 @@ async def create_subscription(
 ) -> int:
     """Create a subscription from the target database to the source database."""
 
+    # We need to match the client encoding of the replication connection to the
+    # underlying encoding of the source database. Otherwise, we may run into issues
+    # such as when dumping UTF8-values stored in an ``SQL_ASCII`` database, since
+    # writing UTF8-encoded values to such a database is a good thing to do.
+    client_encoding = await source_db.fetchrow(
+        "SELECT pg_encoding_to_char(encoding) FROM pg_database WHERE datname = $1",
+        source_dbname
+    )
+
     active_subscription = await target_db.fetchrow(
         "SELECT * FROM pg_catalog.pg_subscription WHERE subname = $1", subscription_name
     )
@@ -218,7 +229,8 @@ async def create_subscription(
         f"dbname={shlex.quote(source_dbname)} "
         f"application_name={shlex.quote(constants.REPLICATION_APPLICATION_NAME)} "
         f"user={shlex.quote(constants.REPLICATION_USERNAME)} "
-        f"password={shlex.quote(password)}"
+        f"password={shlex.quote(password)} "
+        f"client_encoding={shlex.quote(client_encoding[0])}"
     )
 
     if active_subscription is None:
