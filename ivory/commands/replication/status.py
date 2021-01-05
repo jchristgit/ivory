@@ -86,7 +86,7 @@ async def run(args: argparse.Namespace) -> int:
         log.info("LSN matches.")
     else:
         log.warning(
-            "Source is at LSN %r, standby at %r (diff %d).",
+            "Source is at LSN %x, standby at %x (diff %d).",
             my_lsn,
             replication_stats['flush_lsn'],
             my_lsn - replication_stats['flush_lsn'],
