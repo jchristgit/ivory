@@ -165,6 +165,7 @@ async def check_schema_sync(
                 tolines=target_schema.splitlines(),
                 fromdesc="Source schema",
                 todesc="Target schema",
+                context=True,
             )
             f.write(content)
         return f"relation schemas out of sync, see {f.name!r}"
