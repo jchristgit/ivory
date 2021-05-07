@@ -2,7 +2,6 @@
 
 import argparse
 import logging
-import shlex
 from datetime import datetime
 from typing import Dict
 
@@ -76,9 +75,7 @@ async def run(args: argparse.Namespace) -> int:
     )
 
     try:
-        await maintenance_db.execute(
-            f'DROP DATABASE IF EXISTS "{args.target_dbname}"'
-        )
+        await maintenance_db.execute(f'DROP DATABASE IF EXISTS "{args.target_dbname}"')
 
     except asyncpg.exceptions.PostgresError as err:
         log.exception(
@@ -89,6 +86,10 @@ async def run(args: argparse.Namespace) -> int:
         log.info("Dropped database %r from target.", args.target_dbname)
 
     create_opts = await get_database_create_options(source_db)
+
+    if create_opts.get('ENCODING') == 'SQL_ASCII':
+        create_opts['TEMPLATE'] = 'template0'
+
     joined_opts = ' '.join(f'{key} = {value}' for key, value in create_opts.items())
     await maintenance_db.execute(
         f'CREATE DATABASE "{args.target_dbname}" WITH {joined_opts}'
