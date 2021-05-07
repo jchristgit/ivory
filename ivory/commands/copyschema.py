@@ -77,7 +77,7 @@ async def run(args: argparse.Namespace) -> int:
 
     try:
         await maintenance_db.execute(
-            f"DROP DATABASE IF EXISTS {shlex.quote(args.target_dbname)}"
+            f'DROP DATABASE IF EXISTS "{args.target_dbname}"'
         )
 
     except asyncpg.exceptions.PostgresError as err:
@@ -91,11 +91,11 @@ async def run(args: argparse.Namespace) -> int:
     create_opts = await get_database_create_options(source_db)
     joined_opts = ' '.join(f'{key} = {value}' for key, value in create_opts.items())
     await maintenance_db.execute(
-        f"CREATE DATABASE {shlex.quote(args.target_dbname)} WITH {joined_opts}"
+        f'CREATE DATABASE "{args.target_dbname}" WITH {joined_opts}'
     )
     await maintenance_db.execute(
         f"""
-        COMMENT ON DATABASE {shlex.quote(args.target_dbname)}
+        COMMENT ON DATABASE "{args.target_dbname}"
         IS 'Created via ivory on {datetime.utcnow().isoformat()}'
         """
     )
