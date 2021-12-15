@@ -1,6 +1,9 @@
 # ivory
 
-Manages PostgreSQL logical replication.
+Manages PostgreSQL logical replication. Requires PostgreSQL 10 or newer, due to
+the dependency to [PostgreSQL's native logical
+replication](https://www.postgresql.org/docs/10/logical-replication.html).
+
 
 ## Description
 
