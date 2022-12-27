@@ -277,6 +277,7 @@ async def create_subscription(
     )
 
     if active_subscription is None:
+        log.debug("Creating new subscription %r.", subscription_name)
         try:
             sql = f"""
             CREATE SUBSCRIPTION {shlex.quote(subscription_name)}
@@ -296,7 +297,10 @@ async def create_subscription(
             log.info("Subscription %r created.", subscription_name)
 
     else:
+        log.debug("Existing subscription %r found.", subscription_name)
+
         if active_subscription['subconninfo'] != conninfo:
+            log.debug("Spotted mismatch in conninfo.")
             await target_db.execute(
                 f"""
             ALTER SUBSCRIPTION
@@ -307,6 +311,7 @@ async def create_subscription(
             log.info("Updated connection info of existing subscription.")
 
         if publication_name not in active_subscription['subpublications']:
+            log.debug("Spotted mismatch in publication name.")
             await target_db.execute(
                 f"""
                 ALTER SUBSCRIPTION
