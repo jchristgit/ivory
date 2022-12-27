@@ -28,8 +28,10 @@ jobs:
         run: make
         env:
           SOURCE_HOST: source
+          SOURCE_USER: postgres
           SOURCE_PASSWORD: source
           TARGET_HOST: target
+          TARGET_USER: postgres
           TARGET_PASSWORD: target
 
       - name: cache python packages
