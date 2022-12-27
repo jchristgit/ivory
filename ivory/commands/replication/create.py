@@ -90,7 +90,7 @@ async def run(args: argparse.Namespace) -> int:
     if args.drop_replication_user:
         user = constants.REPLICATION_USERNAME
         schema_rows = await source_db.fetch(
-            f"""
+            """
             SELECT DISTINCT quote_ident(table_schema)
             FROM information_schema.tables
             WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
@@ -107,9 +107,7 @@ async def run(args: argparse.Namespace) -> int:
             REVOKE USAGE ON SCHEMA {joined_schemas} FROM {shlex.quote(user)}
             """
         )
-        await source_db.execute(
-            f"DROP USER IF EXISTS {shlex.quote(user)}"
-        )
+        await source_db.execute(f"DROP USER IF EXISTS {shlex.quote(user)}")
         log.info("Dropped replication user.")
     rc = await create_replication_user(
         source_db=source_db, password=replication_password
@@ -179,7 +177,7 @@ async def create_replication_user(source_db: asyncpg.Connection, password: str) 
 
     # Grant privileges
     schema_rows = await source_db.fetch(
-        f"""
+        """
         SELECT DISTINCT quote_ident(table_schema)
         FROM information_schema.tables
         WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
@@ -196,7 +194,6 @@ async def create_replication_user(source_db: asyncpg.Connection, password: str) 
         GRANT USAGE ON SCHEMA {joined_schemas} TO {shlex.quote(name)}
         """
     )
-
 
     return 0
 

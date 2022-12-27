@@ -87,7 +87,10 @@ async def run(args: argparse.Namespace) -> int:
 
     create_opts = await get_database_create_options(source_db)
 
-    if create_opts.get('ENCODING') == 'SQL_ASCII' or create_opts.get('LC_COLLATE') == '"C"':
+    if (
+        create_opts.get('ENCODING') == 'SQL_ASCII'
+        or create_opts.get('LC_COLLATE') == '"C"'
+    ):
         create_opts['TEMPLATE'] = 'template0'
 
     # This can be added later behind a "migrate encoding" flag,

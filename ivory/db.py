@@ -5,7 +5,9 @@ import asyncpg  # type: ignore
 
 
 async def connect_single(
-    args: argparse.Namespace, kind: str, override: Dict[str, Any] = {},
+    args: argparse.Namespace,
+    kind: str,
+    override: Dict[str, Any] = {},
 ) -> asyncpg.Connection:
     options = {
         'host': getattr(args, f'{kind}_host'),
