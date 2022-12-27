@@ -153,7 +153,10 @@ async def run(args: argparse.Namespace) -> int:
                 name,
                 current_pretty,
                 target_pretty,
-                (current / target) * 100,
+                # There was at least one instance of an edge case
+                # spotted here where `target` was zero. In that case,
+                # let's just make up the fact that we're at 0% for now.
+                (current / target if target else 0) * 100,
             )
             rc = 1
 
