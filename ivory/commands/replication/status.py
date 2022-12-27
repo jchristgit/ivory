@@ -191,6 +191,7 @@ def substate_to_human(value: bytes) -> str:
     mapping = {
         b'i': 'initializing',
         b'd': 'data is being copied',
+        b'f': 'finished table copy',
         b's': 'synchronized',
         b'r': 'ready (normal replication)',
     }
