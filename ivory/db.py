@@ -13,6 +13,8 @@ async def connect_single(
         'database': getattr(args, f'{kind}_dbname'),
         'user': getattr(args, f'{kind}_user'),
         'password': getattr(args, f'{kind}_password'),
+        # The default may not work on SSL-enforcing databases.
+        # 'ssl': True,
         **override,
     }
     return await asyncpg.connect(**options)
