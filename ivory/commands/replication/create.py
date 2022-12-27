@@ -170,8 +170,20 @@ async def create_publication(
     )
 
     if active_publication is None:
+        (tables,) = await source_db.fetchrow(
+            """
+            SELECT
+                array_agg(quote_ident(table_schema) || '.' || quote_ident(table_name))
+            FROM
+                information_schema.tables
+            WHERE
+                table_schema NOT IN ('pg_catalog', 'information_schema')
+                AND table_type = 'BASE TABLE';
+            """
+        )
+        joined_tables = ', '.join(tables)
         await source_db.execute(
-            f"CREATE PUBLICATION {shlex.quote(publication_name)} FOR ALL TABLES"
+            f"CREATE PUBLICATION {shlex.quote(publication_name)} FOR TABLE {joined_tables}"
         )
         await source_db.execute(
             f"COMMENT ON PUBLICATION {shlex.quote(publication_name)} "

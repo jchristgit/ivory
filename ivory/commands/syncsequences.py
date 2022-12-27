@@ -96,7 +96,10 @@ async def run(args: argparse.Namespace) -> int:
     (source_db, target_db) = await db.connect(args)
 
     sequences = await source_db.fetch(
-        "SELECT relname FROM pg_catalog.pg_class WHERE relkind = 'S'"
+        """
+        SELECT quote_ident(schemaname) || '.' || quote_ident(sequencename)
+        FROM pg_catalog.pg_sequences
+        """
     )
 
     source_sequence_values = {}

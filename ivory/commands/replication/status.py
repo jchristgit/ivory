@@ -124,12 +124,12 @@ async def run(args: argparse.Namespace) -> int:
 
     state_sql = """
     SELECT
-        pc.relname AS "name",
+        quote_ident(psut.schemaname) || '.' || quote_ident(psut.relname) AS "name",
         psr.srsubstate AS "state"
     FROM
         pg_catalog.pg_subscription_rel AS psr
         JOIN pg_catalog.pg_subscription AS ps ON (psr.srsubid = ps.oid)
-        JOIN pg_catalog.pg_class AS pc ON (psr.srrelid = pc.oid)
+        JOIN pg_catalog.pg_stat_user_tables AS psut ON (psr.srrelid = psut.relid)
     WHERE
         ps.subname = $1
     """
