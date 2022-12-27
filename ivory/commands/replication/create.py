@@ -88,8 +88,27 @@ async def run(args: argparse.Namespace) -> int:
 
     # if err != nil
     if args.drop_replication_user:
+        user = constants.REPLICATION_USERNAME
+        schema_rows = await source_db.fetch(
+            f"""
+            SELECT DISTINCT quote_ident(table_schema)
+            FROM information_schema.tables
+            WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
+            """
+        )
+        joined_schemas = ', '.join(schema for (schema,) in schema_rows)
         await source_db.execute(
-            f"DROP USER IF EXISTS {shlex.quote(constants.REPLICATION_USERNAME)}"
+            f"""
+            REVOKE SELECT ON ALL TABLES IN SCHEMA {joined_schemas} FROM {shlex.quote(user)}
+            """
+        )
+        await source_db.execute(
+            f"""
+            REVOKE USAGE ON SCHEMA {joined_schemas} FROM {shlex.quote(user)}
+            """
+        )
+        await source_db.execute(
+            f"DROP USER IF EXISTS {shlex.quote(user)}"
         )
         log.info("Dropped replication user.")
     rc = await create_replication_user(
@@ -122,18 +141,18 @@ async def run(args: argparse.Namespace) -> int:
 async def create_replication_user(source_db: asyncpg.Connection, password: str) -> int:
     """Create the replication user on the source database."""
 
+    name = constants.REPLICATION_USERNAME
     existing_user = await source_db.fetchrow(
-        "SELECT * FROM pg_user WHERE usename = $1", constants.REPLICATION_USERNAME
+        "SELECT * FROM pg_user WHERE usename = $1", name
     )
 
     if existing_user is None:
         sql = f"""
         CREATE USER
-            {shlex.quote(constants.REPLICATION_USERNAME)}
+            {shlex.quote(name)}
         WITH
             REPLICATION
             PASSWORD {helpers.quote(password)}
-            SUPERUSER
         """
 
         try:
@@ -141,10 +160,11 @@ async def create_replication_user(source_db: asyncpg.Connection, password: str) 
                 await source_db.execute(sql)
                 await source_db.execute(
                     f"""
-                    COMMENT ON ROLE {shlex.quote(constants.REPLICATION_USERNAME)}
+                    COMMENT ON ROLE {name}
                         IS 'ivory: replication user (created on {datetime.utcnow().isoformat()})'
                     """
                 )
+
         except asyncpg.exceptions.PostgresError as err:
             log.exception("Unable to create user:", exc_info=err)
             return 1
@@ -156,6 +176,27 @@ async def create_replication_user(source_db: asyncpg.Connection, password: str) 
         if not existing_user['userepl']:
             log.error("Existing user cannot use replication.")
             return 1
+
+    # Grant privileges
+    schema_rows = await source_db.fetch(
+        f"""
+        SELECT DISTINCT quote_ident(table_schema)
+        FROM information_schema.tables
+        WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
+        """
+    )
+    joined_schemas = ', '.join(schema for (schema,) in schema_rows)
+    await source_db.execute(
+        f"""
+        GRANT SELECT ON ALL TABLES IN SCHEMA {joined_schemas} TO {shlex.quote(name)}
+        """
+    )
+    await source_db.execute(
+        f"""
+        GRANT USAGE ON SCHEMA {joined_schemas} TO {shlex.quote(name)}
+        """
+    )
+
 
     return 0
 
@@ -230,18 +271,19 @@ async def create_subscription(
         f"dbname={shlex.quote(source_dbname)} "
         f"application_name={shlex.quote(constants.REPLICATION_APPLICATION_NAME)} "
         f"user={shlex.quote(constants.REPLICATION_USERNAME)} "
-        f"password={shlex.quote(password)}"
+        f"password={shlex.quote(password)} "
+        f"options=''-c statement_timeout=0''"
+        # f"sslmode=require"
     )
 
     if active_subscription is None:
         try:
-            await target_db.execute(
-                f"""
-                CREATE SUBSCRIPTION {shlex.quote(subscription_name)}
-                    CONNECTION {shlex.quote(conninfo)}
-                    PUBLICATION {shlex.quote(publication_name)}
-                """
-            )
+            sql = f"""
+            CREATE SUBSCRIPTION {shlex.quote(subscription_name)}
+                CONNECTION '{conninfo}'
+                PUBLICATION {shlex.quote(publication_name)}
+            """
+            await target_db.execute(sql)
 
             await target_db.execute(
                 f"COMMENT ON SUBSCRIPTION {shlex.quote(subscription_name)} "
