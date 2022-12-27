@@ -26,6 +26,11 @@ jobs:
 
       - name: run tests
         run: make
+        env:
+          SOURCE_HOST: source
+          SOURCE_PASSWORD: source
+          TARGET_HOST: target
+          TARGET_PASSWORD: target
 
       - name: cache python packages
         uses: actions/cache@v3
