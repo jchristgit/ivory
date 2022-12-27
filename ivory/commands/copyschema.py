@@ -90,6 +90,14 @@ async def run(args: argparse.Namespace) -> int:
     if create_opts.get('ENCODING') == 'SQL_ASCII' or create_opts.get('LC_COLLATE') == '"C"':
         create_opts['TEMPLATE'] = 'template0'
 
+    # This can be added later behind a "migrate encoding" flag,
+    # although handling further up in the stack (`get_database_create_options`)
+    # would definitely be the cleaner approach.
+    #
+    # del create_opts['LC_COLLATE']
+    # del create_opts['TEMPLATE']
+    # del create_opts['LC_CTYPE']
+
     joined_opts = ' '.join(f'{key} = {value}' for key, value in create_opts.items())
     await maintenance_db.execute(
         f'CREATE DATABASE "{args.target_dbname}" WITH {joined_opts}'
