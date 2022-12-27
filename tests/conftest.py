@@ -3,11 +3,12 @@ import os
 
 import asyncpg  # type: ignore
 import pytest  # type: ignore
+import pytest_asyncio  # type: ignore
 
 from ivory import cli
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def source_db() -> asyncpg.Connection:
     return await asyncpg.connect(
         host=os.getenv('SOURCE_HOST'),
@@ -18,7 +19,7 @@ async def source_db() -> asyncpg.Connection:
     )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def target_db() -> asyncpg.Connection:
     return await asyncpg.connect(
         host=os.getenv('TARGET_HOST'),
