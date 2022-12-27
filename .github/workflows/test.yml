@@ -1,0 +1,35 @@
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: python:3.11
+    services:
+      source:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: source
+
+      target:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: target
+
+    steps:
+      - name: check out code
+        uses: actions/checkout@v3
+
+      - name: install dependencies
+        run: pip install -r requirements-dev.txt -r requirements.in
+
+      - name: run tests
+        run: make
+
+      - name: cache python packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: v1-pip-deps-${{ hashFiles('requirements*') }}
+          restore-keys: v1-pip-deps-
